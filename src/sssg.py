@@ -1,5 +1,6 @@
 """Main entrypoint of the program"""
 
+import re
 import argparse
 import os
 import shutil
@@ -15,13 +16,32 @@ def validate_cmd_args(args):
         )
 
 
+def generate_page(page_path, output_dir):
+    with open(page_path, "r") as file:
+        contents = "\n".join(file.readlines())
+    matches = re.finditer(r"{%(.*?)%}", contents)
+    for match in matches:
+        print(
+            f"'{match.group(1).strip()}' , START_INDEX = {match.start()}, END_INDEX = {match.end()}"
+        )
+
+
 def process_pages(pages_dir, output_dir):
-    print("processing pages")
+    """Processes html files inside pages directory recursively"""
+    files = os.listdir(pages_dir)
+    for file in files:
+        if file.endswith(".html"):
+            file_path = os.path.join(pages_dir, file)
+            generate_page(file_path, output_dir)
+        elif os.path.isdir(file):
+            process_pages(os.path.join(pages_dir, file), output_dir)
 
 
 def process_public(public_dir, output_dir):
     """Copies everything inside the public directory to the output dir"""
+    """
     shutil.copytree(public_dir, output_dir, dirs_exist_ok=True)
+    """
 
 
 if __name__ == "__main__":

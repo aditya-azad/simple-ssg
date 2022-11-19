@@ -13,3 +13,6 @@
     - for loops
     - arguments to templates
 - support for markdown
+- auto serve during development
+- minify files
+- compress images
