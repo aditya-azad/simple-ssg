@@ -32,10 +32,12 @@ All your concrete web pages are stored here. The pages in the directory are also
 For example,
 ``` text
 input_dir
-|--posts
-|   |--first-post.html
-|--index.html
-|--about.html
+|--pages
+   |--posts
+   |  |--first-post.html
+   |--index.html
+   |--about.html
+...
 ```
 
 This will result in URLs:
