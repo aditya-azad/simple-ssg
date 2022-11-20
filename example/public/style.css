@@ -7,6 +7,9 @@ body {
     word-wrap: break-word;
     overflow-wrap: break-word;
     line-height: 1.5;
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .title {
@@ -57,7 +60,17 @@ h1 {
 body {
     background-color: rgb(5, 5, 5);
     color: rgb(193, 193, 193);
-    display: flex;
+}
+
+button {
+    all: unset;
+    background-color: white;
+    color: black;
+    padding: 5px;
+}
+
+main {
+    flex-grow: 1;
 }
 
 .title,
