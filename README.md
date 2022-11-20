@@ -18,6 +18,7 @@ A simple static site generator written with the following features:
 - auto serve during development
 - minify files
 - compress images
+- config file and variables for use inside templates
 
 ## Directory structure
 
