@@ -19,6 +19,7 @@ A simple static site generator written with the following features:
 - minify files
 - compress images
 - config file and variables for use inside templates
+- improve performance
 
 ## Directory structure
 
