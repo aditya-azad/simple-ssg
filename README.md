@@ -2,7 +2,7 @@
 
 A simple static site generator written with the following features:
 - Minimal templating language.
-- Bloat free websites (but that is mostly upto you).
+- Bloat free websites (but that is mostly up to you).
 
 ## Requirements
 
@@ -37,7 +37,7 @@ input_dir
 |--about.html
 ```
 
-This will result in urls:
+This will result in URLs:
 - `yourwebsite.domain/index.html`
 - `yourwebsite.domain/about.html`
 - `yourwebsite.domain/posts/first-post.html`.
@@ -52,7 +52,7 @@ This will result in urls:
 
 ## Templating Language Syntax
 
-The language use tags similar to nunjucks' `{% ... %}` syntax. There are currently following tags implemented. Templates themselves have can have other templates within them.
+The language use tags similar to Nunjucks' `{% ... %}` syntax. There are currently following tags implemented. Templates themselves have can have other templates within them.
 
 ### `{% use_template <template_name> %}`
 
@@ -70,7 +70,7 @@ python ./src/sssg.py -i <input_directory> -o <output directory>
 
 Make sure output directory is empty. There is an example provided in `example` directory. Use that directory as the `input_directory` in the above command to see how it looks.
 
-## Developmenet Environment
+## Development Environment
 
 Assuming you are using python 3. Run the following command inside the output directory and go to `127.0.0.1:8000` in your browser. You have to refresh the page though.
 
