@@ -1,6 +1,5 @@
 """Main entrypoint of the program"""
 
-from collections import namedtuple
 import re
 import argparse
 import os
@@ -29,7 +28,8 @@ def validate_cmd_args(args):
 
 def generate_page(page_path, template_dir, content=None):
     """Expands all the tags present in the page recursively"""
-    # TODO: this function can be optimized to just go over the page once for searching and expanding tags
+    # TODO: this function can be optimized to just go over
+    # the page once for searching and expanding tags
     with open(page_path, "r", encoding="utf-8") as file:
         page_contents = "".join(file.readlines())
     regex = r"{%(.*?)%}"
@@ -120,7 +120,6 @@ def process_public(public_dir, output_dir):
 
 
 if __name__ == "__main__":
-
     # parse and validate arguments
     parser = argparse.ArgumentParser(
         prog="Simple SSG",
@@ -138,7 +137,6 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     validate_cmd_args(args)
-
     # run it
     files = os.listdir(args.inputdir)
     for file in files:
