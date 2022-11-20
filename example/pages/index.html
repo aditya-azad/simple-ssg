@@ -1,0 +1,17 @@
+{% use_template main_layout %}
+
+<main>
+    <h1 id="header">👋 Hi there!</h1>
+    <p>This is a simple example built with Simple SSG. Use this as a template for your own project.</p>
+    <button id="clickme">Click Me!</button>
+</main>
+<script>
+    "use strict";
+    function choose(choices) {
+        var index = Math.floor(Math.random() * choices.length);
+        return choices[index];
+    }
+    var button = document.getElementById("clickme");
+    var header = document.getElementById("header");
+    button.addEventListener("click", () => { header.innerText = choose(["🤘 Yo!!", "👋 Hello there!", "💻 Beep Bop!"]) })
+</script>

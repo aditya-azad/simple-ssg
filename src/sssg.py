@@ -28,7 +28,9 @@ def validate_cmd_args(args):
 
 
 def generate_page(page_path, template_dir, content=None):
-    with open(page_path, "r") as file:
+    """Expands all the tags present in the page recursively"""
+    # TODO: this function can be optimized to just go over the page once for searching and expanding tags
+    with open(page_path, "r", encoding="utf-8") as file:
         page_contents = "".join(file.readlines())
     regex = r"{%(.*?)%}"
 
@@ -36,7 +38,7 @@ def generate_page(page_path, template_dir, content=None):
     matches = re.finditer(regex, page_contents)
     for match in matches:
         command, *_ = match.group(1).strip().split(" ")
-        if command == "content":
+        if command == "fill_content":
             page_contents = (
                 page_contents[: match.start()] + content + page_contents[match.end() :]
             )
@@ -62,34 +64,25 @@ def generate_page(page_path, template_dir, content=None):
         if not found:
             break
 
-    # expand to templates
-    """
-    matches = re.finditer(regex, page_contents)
-    Template = namedtuple("Template", "type args match")
-    template_stack = []
-    for match in matches:
-        command, *args = match.group(1).strip().split(" ")
-        if command == "begin_use_template":
-            template_stack.append(Template("begin", args, match))
-        elif command == "end_use_template":
-            matching_start = template_stack.pop()
-            if matching_start.args[0] != args[0]:
-                raise Exception(
-                    "Incorrect syntax, closing tag for the template not in appropriate place"
+    # expand into templates
+    while True:
+        matches = re.finditer(regex, page_contents)
+        found = False
+        for match in matches:
+            command, *args = match.group(1).strip().split(" ")
+            if command == "use_template":
+                found = True
+                page_contents = (
+                    page_contents[: match.start()] + page_contents[match.end() :]
                 )
-            content_between = generate_page(
-                os.path.join(template_dir, args[0] + ".html"),
-                template_dir,
-                page_contents[matching_start.match.end() + 1 : match.start()],
-            )
-            page_contents = (
-                page_contents[: matching_start.match.start()]
-                + content_between
-                + page_contents[match.end() + 1 :]
-            )
-    if not template_stack:
-        raise Exception("Not enough closing template tags, check the code")
-    """
+                page_contents = generate_page(
+                    os.path.join(template_dir, args[0] + ".html"),
+                    template_dir,
+                    page_contents[match.start() :],
+                )
+            break
+        if not found:
+            break
 
     return page_contents
 
@@ -122,9 +115,8 @@ def process_pages(base_pages_dir, pages_dir, output_dir, template_dir):
 
 def process_public(public_dir, output_dir):
     """Copies everything inside the public directory to the output dir"""
-    """
+    print("Copying over public files...")
     shutil.copytree(public_dir, output_dir, dirs_exist_ok=True)
-    """
 
 
 if __name__ == "__main__":
