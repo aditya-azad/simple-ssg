@@ -5,6 +5,9 @@ import argparse
 import os
 import shutil
 import markdown
+import yaml
+
+GLOBAL_VARS = {}
 
 
 def leftover_path(longer_path, shorter_path):
@@ -43,11 +46,30 @@ def generate_page(page_path, template_dir, content=None):
     # fill content
     matches = re.finditer(regex, page_contents)
     for match in matches:
-        command, *_ = match.group(1).strip().split(" ")
+        command, *args = match.group(1).strip().split(" ")
         if command == "fill_content":
             page_contents = (
                 page_contents[: match.start()] + content + page_contents[match.end() :]
             )
+
+    # fill vars
+    while True:
+        found = False
+        matches = re.finditer(regex, page_contents)
+        for match in matches:
+            command, *args = match.group(1).strip().split(" ")
+            if command == "fill_var":
+                found = True
+                if args[0] not in GLOBAL_VARS:
+                    raise Exception(f"Cannot find '{args[0]}' in the config file")
+                page_contents = (
+                    page_contents[: match.start()]
+                    + GLOBAL_VARS[args[0]]
+                    + page_contents[match.end() :]
+                )
+                break
+        if not found:
+            break
 
     # fill templates
     while True:
@@ -148,6 +170,11 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     validate_cmd_args(args)
+    # read config
+    config_file_path = os.path.join(args.inputdir, "config.yml")
+    if os.path.exists(config_file_path):
+        with open(config_file_path) as file:
+            GLOBAL_VARS = yaml.safe_load(file)
     # run it
     files = os.listdir(args.inputdir)
     for file in files:

@@ -5,11 +5,18 @@
 <button id="clickme">Click Me!</button>
 <script>
     "use strict";
-    function choose(choices) {
+    function choose() {
+        var choices = ["🤘 Yo!", "👋 Hello there!", "💻 Beep Bop!", "👋 Hi there!"];
         var index = Math.floor(Math.random() * choices.length);
         return choices[index];
     }
     var button = document.getElementById("clickme");
     var header = document.getElementById("header");
-    button.addEventListener("click", () => { header.innerText = choose(["🤘 Yo!!", "👋 Hello there!", "💻 Beep Bop!"]) })
+    button.addEventListener("click", () => {
+        var choice = choose();
+        while (choice === header.innerText) {
+            choice = choose();
+        }
+        header.innerText = choice;
+    });
 </script>

@@ -14,7 +14,6 @@ TODO
 - auto serve during development
 - minify files
 - compress images
-- config file for global variables
 - install script
 - improve performance
 ```
@@ -51,11 +50,15 @@ This will result in URLs:
 
 ### `public` directory
 
-- everything inside this is copied as it is to the output directory.
+Everything inside this is copied as it is to the output directory.
 
 ### `template` directory
 
-- this is where all the templates for pages (and other templates templates) reside.
+This is where all the templates for pages (and other templates templates) reside.
+
+### `config.yml` file
+
+This is where you can store all the global variables that is accessable from `pages` and `templates` directories.
 
 ## Templating Language Syntax
 
@@ -72,6 +75,10 @@ This tag is replaced with the contents of the template.
 ### `{% fill_content %}`
 
 This is where the contents of the page are pasted when using `{% use_template <template_name> %}`.
+
+### `{% fill_var <variable_name> %}`
+
+You can use the variables defined in `config.yml` file using this tag.
 
 ## How to use
 
