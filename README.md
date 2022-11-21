@@ -14,7 +14,6 @@ TODO
 - auto serve during development
 - minify files
 - compress images
-- install script
 - improve performance
 ```
 
@@ -62,7 +61,7 @@ This is where you can store all the global variables that is accessable from `pa
 
 ## Templating Language Syntax
 
-The language use tags similar to Nunjucks' `{% ... %}` syntax. There are currently following tags implemented. Templates themselves have can have other templates within them.
+The language use tags similar to Jinja's `{% ... %}` syntax. There are currently following tags implemented. Templates themselves have can have other templates within them.
 
 ### `{% use_template <template_name> %}`
 
@@ -81,6 +80,18 @@ This is where the contents of the page are pasted when using `{% use_template <t
 You can use the variables defined in `config.yml` file using this tag.
 
 ## How to use
+
+### Install
+
+Use pyinstaller for creating an executable. After you run this command, you will get your executable in `dist` folder.
+
+``` text
+pyinstaller ./src/sssg.py
+```
+
+Copy the `sssg` folder to anywhere on your system and add it to path to use the executable from anywhere on your system.
+
+### From source
 
 ``` text
 pip install -r requirements.txt
