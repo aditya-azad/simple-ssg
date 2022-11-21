@@ -4,6 +4,7 @@ import re
 import argparse
 import os
 import shutil
+import markdown
 
 
 def leftover_path(longer_path, shorter_path):
@@ -27,12 +28,17 @@ def validate_cmd_args(args):
 
 
 def generate_page(page_path, template_dir, content=None):
-    """Expands all the tags present in the page recursively"""
+    """Expands all the tags present in the html or md page recursively"""
     # TODO: this function can be optimized to just go over
     # the page once for searching and expanding tags
+    regex = r"{%(.*?)%}"
+
     with open(page_path, "r", encoding="utf-8") as file:
         page_contents = "".join(file.readlines())
-    regex = r"{%(.*?)%}"
+    if page_path.endswith(".md"):
+        page_contents = markdown.markdown(
+            page_contents, extensions=["fenced_code", "tables", "footnotes"]
+        )
 
     # fill content
     matches = re.finditer(regex, page_contents)
@@ -78,7 +84,7 @@ def generate_page(page_path, template_dir, content=None):
                 page_contents = generate_page(
                     os.path.join(template_dir, args[0] + ".html"),
                     template_dir,
-                    page_contents[match.start() :],
+                    page_contents,
                 )
             break
         if not found:
@@ -88,10 +94,10 @@ def generate_page(page_path, template_dir, content=None):
 
 
 def process_pages(base_pages_dir, pages_dir, output_dir, template_dir):
-    """Processes html files inside pages directory recursively"""
+    """Processes html and md files inside pages directory recursively"""
     files = os.listdir(pages_dir)
     for file in files:
-        if file.endswith(".html"):
+        if file.endswith(".html") or file.endswith(".md"):
             file_path = os.path.join(pages_dir, file)
             print(f"Processing: {file_path}")
             contents = generate_page(file_path, template_dir)
@@ -99,9 +105,14 @@ def process_pages(base_pages_dir, pages_dir, output_dir, template_dir):
                 os.path.join(output_dir, leftover_path(pages_dir, base_pages_dir)),
                 exist_ok=True,
             )
+            final_file_name = file
+            if file.endswith(".md"):
+                final_file_name = final_file_name[:-3] + ".html"
             with open(
                 os.path.join(
-                    output_dir, leftover_path(pages_dir, base_pages_dir), file
+                    output_dir,
+                    leftover_path(pages_dir, base_pages_dir),
+                    final_file_name,
                 ),
                 "w",
                 encoding="utf-8",

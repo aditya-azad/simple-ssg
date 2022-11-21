@@ -1,8 +1,10 @@
 # Simple Static Site Generator
 
 A simple static site generator written with the following features:
+
 - Minimal templating language.
 - Bloat free websites (but that is mostly up to you).
+- Markdown support
 
 ## Requirements
 
@@ -11,9 +13,8 @@ A simple static site generator written with the following features:
 ## TODO
 
 - templating language
-    - for loops
-    - arguments to templates
-- support for markdown
+  - for loops
+  - arguments to templates
 - blogging example
 - auto serve during development
 - minify files
@@ -30,6 +31,7 @@ There is a specific directory structure that all input directories must follow.
 All your concrete web pages are stored here. The pages in the directory are also the parse tree roots. Parser goes over all the pages one by one, parsing them and putting writing them to output directory. All the directories and pages inside this directory, conforms to URL schema.
 
 For example,
+
 ``` text
 input_dir
 |--pages
@@ -41,6 +43,7 @@ input_dir
 ```
 
 This will result in URLs:
+
 - `yourwebsite.domain/index.html`
 - `yourwebsite.domain/about.html`
 - `yourwebsite.domain/posts/first-post.html`.
@@ -59,15 +62,19 @@ The language use tags similar to Nunjucks' `{% ... %}` syntax. There are current
 
 ### `{% use_template <template_name> %}`
 
-The `<template_name>` is used as template for the rest of the contents of the page. Basically, the contents of rest of the page is is replaced with contents of the template. The content is placed where `{% fill_content %}` in the template used to be.
+The `<template_name>` is used as template for the page. Basically, the contents of the page is is replaced with contents of the template. The replaced content is placed where `{% fill_content %}` in the template used to be.
 
 ### `{% fill_template <template_name> %}`
 
 This tag is replaced with the contents of the template.
 
+### `{% fill_content %}`
+
+This is where the contents of the page are pasted when using `{% use_template <template_name> %}`.
+
 ## How to use
 
-```bash
+``` text
 python ./src/sssg.py -i <input_directory> -o <output directory>
 ```
 
@@ -77,6 +84,6 @@ Make sure output directory is empty. There is an example provided in `example` d
 
 Assuming you are using python 3. Run the following command inside the output directory and go to `127.0.0.1:8000` in your browser. You have to refresh the page though.
 
-```bash
+``` text
 python -m http.server 8000 --bind 127.0.0.1
 ```

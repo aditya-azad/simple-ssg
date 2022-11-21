@@ -1,3 +1,11 @@
+:root {
+    --color-foreground: rgb(238, 238, 238);
+    --color-background: rgb(0, 0, 0);
+    --color-text: rgb(193, 193, 193);
+    --color-dark-text: rgb(108, 108, 108);
+    --color-link: rgb(14, 255, 14);
+}
+
 body {
     font-family: "Roboto Mono", "Noto Sans", Verdana, Geneva, Tahoma, sans-serif;
     margin: auto;
@@ -7,9 +15,11 @@ body {
     word-wrap: break-word;
     overflow-wrap: break-word;
     line-height: 1.5;
-    height: 90vh;
+    min-height: 90vh;
     display: flex;
     flex-direction: column;
+    background-color: var(--color-background);
+    color: var(--color-text);
 }
 
 .title {
@@ -29,13 +39,30 @@ h6 {
     margin-top: 20px;
 }
 
-hr {
-    height: 2px;
-    border: none;
-}
-
 a {
     text-decoration: underline;
+    color: var(--color-foreground);
+    text-decoration-color: var(--color-dark-text);
+}
+
+a:hover {
+    text-decoration-color: var(--color-link);
+}
+
+table,
+td,
+th {
+    border: 2px solid var(--color-dark-text);
+    border-collapse: collapse;
+}
+
+table {
+    width: 100%;
+}
+
+td,
+th {
+    padding: 5px;
 }
 
 nav {
@@ -52,25 +79,19 @@ nav a {
     margin-right: 10px;
 }
 
-h1 {
-    font-size: 1.5em;
-}
-
-
-body {
-    background-color: rgb(5, 5, 5);
-    color: rgb(193, 193, 193);
-}
-
 button {
     all: unset;
-    background-color: white;
-    color: black;
+    background-color: var(--color-foreground);
+    color: var(--color-background);
     padding: 5px;
 }
 
 main {
     flex-grow: 1;
+}
+
+h1 {
+    font-size: 30px;
 }
 
 .title,
@@ -82,39 +103,19 @@ h5,
 h6,
 strong,
 b {
-    color: #eee;
+    color: var(--color-foreground);
 }
 
-a {
-    color: rgb(255, 255, 255);
-}
-
-code {
-    background-color: #272822;
-}
-
-pre code {
-    color: #ddd;
+pre {
+    color: var(--color-text);
 }
 
 blockquote {
-    color: rgb(108, 108, 108);
+    color: var(--color-dark-text);
 }
 
-textarea,
-input {
-    background-color: #252525;
-    color: #ddd;
-}
-
-hr {
-    background-color: rgb(44, 44, 44);
-}
-
-a {
-    text-decoration-color: rgb(108, 108, 108);
-}
-
-a:hover {
-    text-decoration-color: rgb(14, 255, 14);
+footer {
+    color: var(--color-dark-text);
+    padding-bottom: 20px;
+    padding-top: 20px;
 }
