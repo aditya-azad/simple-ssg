@@ -58,7 +58,7 @@ def generate_page(page_path, template_dir, content=None):
         matches = re.finditer(regex, page_contents)
         for match in matches:
             command, *args = match.group(1).strip().split(" ")
-            if command == "fill_var":
+            if command == "fill_global":
                 found = True
                 if args[0] not in GLOBAL_VARS:
                     raise Exception(f"Cannot find '{args[0]}' in the config file")

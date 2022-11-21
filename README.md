@@ -76,7 +76,7 @@ This tag is replaced with the contents of the template.
 
 This is where the contents of the page are pasted when using `{% use_template <template_name> %}`.
 
-### `{% fill_var <variable_name> %}`
+### `{% fill_global <variable_name> %}`
 
 You can use the variables defined in `config.yml` file using this tag.
 
