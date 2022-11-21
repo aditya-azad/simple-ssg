@@ -1,26 +1,27 @@
 # Simple Static Site Generator
 
-A simple static site generator written with the following features:
-
-- Minimal templating language.
-- Bloat free websites (but that is mostly up to you).
+- Minimal templating language
 - Markdown support
 
-## Requirements
-
-- Python 3.10 (possibly 3.8 >= (not tested))
-
-## TODO
-
+``` text
+TODO
 - templating language
-  - for loops
-  - arguments to templates
+    - for loops
+    - if statements
+    - template props
+    - associated vars
 - blogging example
 - auto serve during development
 - minify files
 - compress images
-- config file and variables for use inside templates
+- config file for global variables
+- install script
 - improve performance
+```
+
+## Requirements
+
+- Python 3.10 (possibly 3.8 >= (not tested))
 
 ## Directory structure
 
@@ -36,7 +37,7 @@ For example,
 input_dir
 |--pages
    |--posts
-   |  |--first-post.html
+   |  |--first-post.md
    |--index.html
    |--about.html
 ...
@@ -75,6 +76,7 @@ This is where the contents of the page are pasted when using `{% use_template <t
 ## How to use
 
 ``` text
+pip install -r requirements.txt
 python ./src/sssg.py -i <input_directory> -o <output directory>
 ```
 

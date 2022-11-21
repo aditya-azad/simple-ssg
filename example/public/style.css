@@ -119,3 +119,7 @@ footer {
     padding-bottom: 20px;
     padding-top: 20px;
 }
+
+footer a {
+    color: var(--color-dark-text);
+}
