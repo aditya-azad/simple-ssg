@@ -1,5 +1,6 @@
 """Main entrypoint of the program"""
 
+from rich.console import Console
 import re
 import argparse
 import os
@@ -7,7 +8,7 @@ import shutil
 import markdown
 import yaml
 
-GLOBAL_VARS = {}
+console = Console()
 
 
 def leftover_path(longer_path, shorter_path):
@@ -18,16 +19,6 @@ def leftover_path(longer_path, shorter_path):
     if i < len(longer_path) and (longer_path[i] == "/" or longer_path[i] == "\\"):
         return longer_path[i + 1 :]
     return longer_path[i:]
-
-
-def validate_cmd_args(args):
-    """Raises exception if the arguments are not what expected"""
-    if (not os.path.exists(args.inputdir)) or (not os.path.exists(args.outputdir)):
-        raise Exception("Invalid directory paths given")
-    if len(os.listdir(args.outputdir)) != 0:
-        raise Exception(
-            "Output directory not empty, delete everything inside the output directory"
-        )
 
 
 def generate_page(page_path, template_dir, content=None):
@@ -152,8 +143,8 @@ def process_public(public_dir, output_dir):
     shutil.copytree(public_dir, output_dir, dirs_exist_ok=True)
 
 
-if __name__ == "__main__":
-    # parse and validate arguments
+def parse_arguments():
+    """Parse and return comman dline arguments"""
     parser = argparse.ArgumentParser(
         prog="Simple SSG",
         description="Simple Static Site Generator",
@@ -169,13 +160,78 @@ if __name__ == "__main__":
         required=True,
     )
     args = parser.parse_args()
-    validate_cmd_args(args)
-    # read config
+    if (not os.path.exists(args.inputdir)) or (not os.path.exists(args.outputdir)):
+        raise Exception("Invalid directory paths given")
+    if len(os.listdir(args.outputdir)) != 0:
+        raise Exception(
+            "Output directory not empty, delete everything inside the output directory"
+        )
+    return args
+
+
+def get_tree(base_path, input_dir):
+    """Walks the directory and returns the syntax tree assuming all files are compatible with templating engine"""
+    root = os.path.join(base_path, input_dir)
+    files = os.listdir(root)
+    tree = {}
+    regex = r"{%(.*?)%}"
+    for file in files:
+        file_path = os.path.join(root, file)
+        if os.path.isfile(file_path):
+            tree[file] = []
+            with open(file_path, "r", encoding="utf-8") as f:
+                page_contents = "".join(f.readlines())
+            matches = [match for match in re.finditer(regex, page_contents)]
+            curr_ptr = 0
+            match_ptr = 0
+            while match_ptr < len(matches):
+                # parse content
+                content = page_contents[curr_ptr : matches[match_ptr].start()]
+                tag = matches[match_ptr].group(1).strip().split(" ")
+                if content:
+                    tree[file].append(("_content", content))
+                tree[file].append(tuple(tag))
+                curr_ptr = matches[match_ptr].end()
+                match_ptr += 1
+            if curr_ptr < len(page_contents):
+                tree[file].append(("_content", page_contents[curr_ptr:]))
+        else:
+            tree[file] = get_tree(root, file)
+    return tree
+
+
+def preprocess(input_dir):
+    """Reads and returns a convenient structure for processing files"""
+    d = {}
+    d["public"] = False
+    d["_globals"] = None
+
+    # config file read
     config_file_path = os.path.join(args.inputdir, "config.yml")
     if os.path.exists(config_file_path):
         with open(config_file_path) as file:
-            GLOBAL_VARS = yaml.safe_load(file)
+            d["_globals"] = yaml.safe_load(file)
+
+    # directories read
+    for file in os.listdir(input_dir):
+        file_path = os.path.join(input_dir, file)
+        if os.path.isdir(file_path):
+            if file == "public":
+                d["public"] = True
+            elif file == "templates":
+                d["templates"] = get_tree(input_dir, file)
+            elif file == "pages":
+                d["pages"] = get_tree(input_dir, file)
+    return d
+
+
+if __name__ == "__main__":
+    args = parse_arguments()
+    tree = preprocess(args.inputdir)
+    console.print(tree)
+
     # run it
+    """
     files = os.listdir(args.inputdir)
     for file in files:
         if file == "pages":
@@ -187,3 +243,4 @@ if __name__ == "__main__":
             )
         elif file == "public":
             process_public(os.path.join(args.inputdir, "public"), args.outputdir)
+    """

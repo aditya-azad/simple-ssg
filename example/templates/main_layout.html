@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en-us">
 
-{% fill_template head %}
+{% expand head %}
 
 <body>
-    {% fill_template header %}
+    {% expand header %}
     <main>
-        {% fill_content %}
+        {% content %}
     </main>
-    {% fill_template footer %}
+    {% expand footer %}
 </body>
 
 </html>

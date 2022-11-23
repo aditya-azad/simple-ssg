@@ -63,19 +63,19 @@ This is where you can store all the global variables that is accessable from `pa
 
 The language use tags similar to Jinja's `{% ... %}` syntax. There are currently following tags implemented. Templates themselves have can have other templates within them.
 
-### `{% use_template <template_name> %}`
+### `{% template <template_name> %}`
 
-The `<template_name>` is used as template for the page. Basically, the contents of the page is is replaced with contents of the template. The replaced content is placed where `{% fill_content %}` in the template used to be.
+The `<template_name>` is used as template for the page. Basically, the contents of the page is is replaced with contents of the template. The replaced content is placed where `{% content %}` in the template used to be.
 
-### `{% fill_template <template_name> %}`
+### `{% expand <template_name> %}`
 
 This tag is replaced with the contents of the template.
 
-### `{% fill_content %}`
+### `{% content %}`
 
-This is where the contents of the page are pasted when using `{% use_template <template_name> %}`.
+This is where the contents of the page are pasted when using `{% template <template_name> %}`.
 
-### `{% fill_global <variable_name> %}`
+### `{% global <variable_name> %}`
 
 You can use the variables defined in `config.yml` file using this tag.
 

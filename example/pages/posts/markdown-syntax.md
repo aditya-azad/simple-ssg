@@ -1,4 +1,4 @@
-{% use_template main_layout %}
+{% template main_layout %}
 
 # Markdown Syntax Guide
 
