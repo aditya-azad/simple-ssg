@@ -9,7 +9,6 @@ TODO
     - for loops
     - if statements
     - template props
-    - associated vars
 - blogging example
 - auto serve during development
 - minify files
@@ -78,6 +77,14 @@ This is where the contents of the page are pasted when using `{% template <templ
 ### `{% global <variable_name> %}`
 
 You can use the variables defined in `config.yml` file using this tag.
+
+### `{% def <variable_name> <value> %}`
+
+You can define variables inside the files of `pages` directory. These variables can be used in rest of the page using `{% use <variable_name> %}`. The order of definition does not matter since def statements are processed before use statements. `value` can be space separated. Basically everything after `variable_name` is part of `value`.
+
+### `{% use <variable_name> %}`
+
+You can use the defined variables using this. See `{% def <variable_name> <value> %}` above.
 
 ## How to use
 

@@ -7,7 +7,6 @@ import sys
 import shutil
 import markdown
 import yaml
-from itertools import chain
 from rich.console import Console
 from rich.theme import Theme
 
@@ -18,91 +17,6 @@ def error(message):
     """Print error message and exit"""
     console.print(message)
     sys.exit(1)
-
-
-def generate_page(page_path, template_dir, content=None):
-    """Expands all the tags present in the html or md page recursively"""
-    # TODO: this function can be optimized to just go over
-    # the page once for searching and expanding tags
-    regex = r"{%(.*?)%}"
-
-    with open(page_path, "r", encoding="utf-8") as file:
-        page_contents = "".join(file.readlines())
-    if page_path.endswith(".md"):
-        page_contents = markdown.markdown(
-            page_contents, extensions=["fenced_code", "tables", "footnotes"]
-        )
-
-    # fill content
-    matches = re.finditer(regex, page_contents)
-    for match in matches:
-        command, *args = match.group(1).strip().split(" ")
-        if command == "fill_content":
-            page_contents = (
-                page_contents[: match.start()] + content + page_contents[match.end() :]
-            )
-
-    # fill vars
-    while True:
-        found = False
-        matches = re.finditer(regex, page_contents)
-        for match in matches:
-            command, *args = match.group(1).strip().split(" ")
-            if command == "fill_global":
-                found = True
-                if args[0] not in GLOBAL_VARS:
-                    error(f"Cannot find '{args[0]}' in the config file")
-                page_contents = (
-                    page_contents[: match.start()]
-                    + GLOBAL_VARS[args[0]]
-                    + page_contents[match.end() :]
-                )
-                break
-        if not found:
-            break
-
-    # fill templates
-    while True:
-        found = False
-        matches = re.finditer(regex, page_contents)
-        for match in matches:
-            command, *args = match.group(1).strip().split(" ")
-            if command == "fill_template":
-                found = True
-                template_contents = generate_page(
-                    os.path.join(template_dir, args[0] + ".html"),
-                    template_dir,
-                )
-                page_contents = (
-                    page_contents[: match.start()]
-                    + template_contents
-                    + page_contents[match.end() :]
-                )
-                break
-        if not found:
-            break
-
-    # expand into templates
-    while True:
-        matches = re.finditer(regex, page_contents)
-        found = False
-        for match in matches:
-            command, *args = match.group(1).strip().split(" ")
-            if command == "use_template":
-                found = True
-                page_contents = (
-                    page_contents[: match.start()] + page_contents[match.end() :]
-                )
-                page_contents = generate_page(
-                    os.path.join(template_dir, args[0] + ".html"),
-                    template_dir,
-                    page_contents,
-                )
-            break
-        if not found:
-            break
-
-    return page_contents
 
 
 def parse_arguments():
@@ -169,7 +83,7 @@ def get_tree(input_dir):
     return tree
 
 
-def preprocess(input_dir, output_dir):
+def generate_data(input_dir, output_dir):
     """Reads and returns a convenient structure for processing files"""
     d = {"_input_dir": input_dir, "_output_dir": output_dir}
     d["_globals"] = None
@@ -203,24 +117,75 @@ def process_public(public_dir, output_dir):
 def process_pages(data):
     """Parse pages directory to create final files"""
     variables = {}
-    roots = {}
-    templates = {}
 
     def def_processor(file, contents, reject=False):
+        new_contents = []
         for item in contents:
             if item[0] == "def":
                 if reject:
                     error(f"You are not allowed to use defs inside '{file}'")
                 if file not in variables:
                     variables[file] = {}
-                variables[file][item[1]] = item[2:]
+                value = " ".join(item[2:]).strip()
+                var_name = item[1]
+                if not value:
+                    error(f"You must provide a value for '{var_name}' in '{file}'")
+                variables[file][var_name] = value
+            else:
+                new_contents.append(item)
+        return new_contents
 
+    def use_processor(file, contents, reject=False):
+        new_contents = []
+        for item in contents:
+            if item[0] == "use":
+                if reject:
+                    error(f"You are not allowed to use use inside '{file}'")
+                try:
+                    new_contents.append(("_content", variables[file][item[1]]))
+                except Exception:
+                    error(f"Error processing variable '{item[1]}' for '{file}'")
+            else:
+                new_contents.append(item)
+        return new_contents
+
+    def globals_processor(file, contents, reject=False):
+        new_contents = []
+        for item in contents:
+            if item[0] == "global":
+                if reject:
+                    error(f"You are not allowed to use global inside '{file}'")
+                try:
+                    new_contents.append(("_content", data["_globals"][item[1]]))
+                except Exception:
+                    error(f"Error processing global variable '{item[1]}' for '{file}'")
+            else:
+                new_contents.append(item)
+        return new_contents
+
+    # def
     for file, contents in data["pages"].items():
-        def_processor(file, contents)
-
+        data["pages"][file] = def_processor(file, contents)
     for file, contents in data["templates"].items():
         def_processor(file, contents, True)
 
+    # use
+    for file, contents in data["pages"].items():
+        data["pages"][file] = use_processor(file, contents)
+    for file, contents in data["templates"].items():
+        use_processor(file, contents, True)
+
+    # globals
+    for file, contents in data["pages"].items():
+        data["pages"][file] = globals_processor(file, contents)
+    for file, contents in data["templates"].items():
+        data["templates"][file] = globals_processor(file, contents)
+
+    # expand
+    # template
+    # markdown
+
+    console.print(data)
     console.print(variables)
 
     """
@@ -253,7 +218,7 @@ def process_pages(data):
 
 if __name__ == "__main__":
     args = parse_arguments()
-    data = preprocess(args.inputdir, args.outputdir)
+    data = generate_data(args.inputdir, args.outputdir)
     # process public
     if data["public"]:
         process_public(os.path.join(data["_input_dir"], "public"), data["_output_dir"])

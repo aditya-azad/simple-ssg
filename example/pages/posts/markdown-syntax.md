@@ -1,11 +1,11 @@
 {% template main_layout %}
 
-# Markdown Syntax Guide
-
 {% def title Markdown Syntax Guide %}
 {% def date 2020-01-03 %}
 {% def description Sample article showcasing basic Markdown syntax and formatting for HTML elements. %}
-{% def tags markdown,syntax %}
+{% def tags markdown syntax %}
+
+# {% use title %}
 
 For a quick cheatsheet, check out <https://simplemde.com/markdown-guide>.
 
