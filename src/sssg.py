@@ -1,24 +1,21 @@
 """Main entrypoint of the program"""
 
 from rich.console import Console
+from rich.theme import Theme
 import re
 import argparse
 import os
+import sys
 import shutil
 import markdown
 import yaml
 
-console = Console()
+console = Console(theme=Theme(inherit=False))
 
 
-def leftover_path(longer_path, shorter_path):
-    """Returns the path in the longer path starting from the first different character"""
-    i = 0
-    while i < len(shorter_path) and longer_path[i] == shorter_path[i]:
-        i += 1
-    if i < len(longer_path) and (longer_path[i] == "/" or longer_path[i] == "\\"):
-        return longer_path[i + 1 :]
-    return longer_path[i:]
+def error(message):
+    console.print(message)
+    sys.exit(1)
 
 
 def generate_page(page_path, template_dir, content=None):
@@ -52,7 +49,7 @@ def generate_page(page_path, template_dir, content=None):
             if command == "fill_global":
                 found = True
                 if args[0] not in GLOBAL_VARS:
-                    raise Exception(f"Cannot find '{args[0]}' in the config file")
+                    error(f"Cannot find '{args[0]}' in the config file")
                 page_contents = (
                     page_contents[: match.start()]
                     + GLOBAL_VARS[args[0]]
@@ -106,43 +103,6 @@ def generate_page(page_path, template_dir, content=None):
     return page_contents
 
 
-def process_pages(base_pages_dir, pages_dir, output_dir, template_dir):
-    """Processes html and md files inside pages directory recursively"""
-    files = os.listdir(pages_dir)
-    for file in files:
-        if file.endswith(".html") or file.endswith(".md"):
-            file_path = os.path.join(pages_dir, file)
-            print(f"Processing: {file_path}")
-            contents = generate_page(file_path, template_dir)
-            os.makedirs(
-                os.path.join(output_dir, leftover_path(pages_dir, base_pages_dir)),
-                exist_ok=True,
-            )
-            final_file_name = file
-            if file.endswith(".md"):
-                final_file_name = final_file_name[:-3] + ".html"
-            with open(
-                os.path.join(
-                    output_dir,
-                    leftover_path(pages_dir, base_pages_dir),
-                    final_file_name,
-                ),
-                "w",
-                encoding="utf-8",
-            ) as file:
-                file.write(contents)
-        elif os.path.isdir(os.path.join(pages_dir, file)):
-            process_pages(
-                base_pages_dir, os.path.join(pages_dir, file), output_dir, template_dir
-            )
-
-
-def process_public(public_dir, output_dir):
-    """Copies everything inside the public directory to the output dir"""
-    print("Copying over public files...")
-    shutil.copytree(public_dir, output_dir, dirs_exist_ok=True)
-
-
 def parse_arguments():
     """Parse and return comman dline arguments"""
     parser = argparse.ArgumentParser(
@@ -161,24 +121,35 @@ def parse_arguments():
     )
     args = parser.parse_args()
     if (not os.path.exists(args.inputdir)) or (not os.path.exists(args.outputdir)):
-        raise Exception("Invalid directory paths given")
+        error("Invalid directory paths given")
     if len(os.listdir(args.outputdir)) != 0:
-        raise Exception(
+        error(
             "Output directory not empty, delete everything inside the output directory"
         )
     return args
 
 
-def get_tree(base_path, input_dir):
+def get_tree(input_dir):
     """Walks the directory and returns the syntax tree assuming all files are compatible with templating engine"""
-    root = os.path.join(base_path, input_dir)
-    files = os.listdir(root)
     tree = {}
     regex = r"{%(.*?)%}"
-    for file in files:
-        file_path = os.path.join(root, file)
-        if os.path.isfile(file_path):
-            tree[file] = []
+    input_root = ""
+
+    def leftover_path(shorter_path, longer_path):
+        i = 0
+        while i < len(shorter_path) and longer_path[i] == shorter_path[i]:
+            i += 1
+        if i < len(longer_path) and (longer_path[i] == "/" or longer_path[i] == "\\"):
+            return longer_path[i + 1 :]
+        return longer_path[i:]
+
+    for root, _, files in os.walk(input_dir):
+        if not input_root:
+            input_root = root
+        for name in files:
+            file_path = os.path.join(root, name)
+            leftover = leftover_path(input_root, file_path)
+            tree[leftover] = []
             with open(file_path, "r", encoding="utf-8") as f:
                 page_contents = "".join(f.readlines())
             matches = [match for match in re.finditer(regex, page_contents)]
@@ -189,22 +160,20 @@ def get_tree(base_path, input_dir):
                 content = page_contents[curr_ptr : matches[match_ptr].start()]
                 tag = matches[match_ptr].group(1).strip().split(" ")
                 if content:
-                    tree[file].append(("_content", content))
-                tree[file].append(tuple(tag))
+                    tree[leftover].append(("_content", content))
+                tree[leftover].append(tuple(tag))
                 curr_ptr = matches[match_ptr].end()
                 match_ptr += 1
             if curr_ptr < len(page_contents):
-                tree[file].append(("_content", page_contents[curr_ptr:]))
-        else:
-            tree[file] = get_tree(root, file)
+                tree[leftover].append(("_content", page_contents[curr_ptr:]))
     return tree
 
 
-def preprocess(input_dir):
+def preprocess(input_dir, output_dir):
     """Reads and returns a convenient structure for processing files"""
-    d = {}
-    d["public"] = False
+    d = {"_input_dir": input_dir, "_output_dir": output_dir}
     d["_globals"] = None
+    d["public"] = False
 
     # config file read
     config_file_path = os.path.join(args.inputdir, "config.yml")
@@ -219,28 +188,56 @@ def preprocess(input_dir):
             if file == "public":
                 d["public"] = True
             elif file == "templates":
-                d["templates"] = get_tree(input_dir, file)
+                d["templates"] = get_tree(os.path.join(input_dir, file))
             elif file == "pages":
-                d["pages"] = get_tree(input_dir, file)
+                d["pages"] = get_tree(os.path.join(input_dir, file))
     return d
+
+
+def process_public(public_dir, output_dir):
+    """Copies everything inside the public directory to the output dir"""
+    console.print("Copying over public files...")
+    shutil.copytree(public_dir, output_dir, dirs_exist_ok=True)
+
+
+def process_pages(data):
+    """Parse pages directory to create final files"""
+    variables = {}
+    for file in data["pages"]:
+        print(file)
+    """
+    if file.endswith(".html") or file.endswith(".md"):
+        file_path = os.path.join(pages_dir, file)
+        contents = generate_page(file_path, template_dir)
+        os.makedirs(
+            os.path.join(output_dir, leftover_path(pages_dir, base_pages_dir)),
+            exist_ok=True,
+        )
+        final_file_name = file
+        if file.endswith(".md"):
+            final_file_name = final_file_name[:-3] + ".html"
+        with open(
+            os.path.join(
+                output_dir,
+                leftover_path(pages_dir, base_pages_dir),
+                final_file_name,
+            ),
+            "w",
+            encoding="utf-8",
+        ) as file:
+            file.write(contents)
+    elif os.path.isdir(os.path.join(pages_dir, file)):
+        process_pages(
+            base_pages_dir, os.path.join(pages_dir, file), output_dir, template_dir
+        )
+    """
 
 
 if __name__ == "__main__":
     args = parse_arguments()
-    tree = preprocess(args.inputdir)
-    console.print(tree)
-
-    # run it
-    """
-    files = os.listdir(args.inputdir)
-    for file in files:
-        if file == "pages":
-            process_pages(
-                os.path.join(args.inputdir, "pages"),
-                os.path.join(args.inputdir, "pages"),
-                args.outputdir,
-                os.path.join(args.inputdir, "templates"),
-            )
-        elif file == "public":
-            process_public(os.path.join(args.inputdir, "public"), args.outputdir)
-    """
+    data = preprocess(args.inputdir, args.outputdir)
+    # process public
+    if data["public"]:
+        process_public(os.path.join(data["_input_dir"], "public"), data["_output_dir"])
+    # process pages
+    process_pages(data)
