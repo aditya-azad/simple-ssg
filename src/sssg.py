@@ -1,7 +1,5 @@
 """Main entrypoint of the program"""
 
-from rich.console import Console
-from rich.theme import Theme
 import re
 import argparse
 import os
@@ -9,11 +7,14 @@ import sys
 import shutil
 import markdown
 import yaml
+from rich.console import Console
+from rich.theme import Theme
 
 console = Console(theme=Theme(inherit=False))
 
 
 def error(message):
+    """Print error message and exit"""
     console.print(message)
     sys.exit(1)
 
@@ -106,9 +107,7 @@ def generate_page(page_path, template_dir, content=None):
 def parse_arguments():
     """Parse and return comman dline arguments"""
     parser = argparse.ArgumentParser(
-        prog="Simple SSG",
-        description="Simple Static Site Generator",
-        epilog="Text at the bottom of help",
+        prog="Simple SSG", description="Simple Static Site Generator"
     )
     parser.add_argument(
         "-i", "--inputdir", help="root directory of your website's files", required=True
