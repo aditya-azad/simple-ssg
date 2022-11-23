@@ -7,6 +7,7 @@ import sys
 import shutil
 import markdown
 import yaml
+from itertools import chain
 from rich.console import Console
 from rich.theme import Theme
 
@@ -202,8 +203,26 @@ def process_public(public_dir, output_dir):
 def process_pages(data):
     """Parse pages directory to create final files"""
     variables = {}
-    for file in data["pages"]:
-        print(file)
+    roots = {}
+    templates = {}
+
+    def def_processor(file, contents, reject=False):
+        for item in contents:
+            if item[0] == "def":
+                if reject:
+                    error(f"You are not allowed to use defs inside '{file}'")
+                if file not in variables:
+                    variables[file] = {}
+                variables[file][item[1]] = item[2:]
+
+    for file, contents in data["pages"].items():
+        def_processor(file, contents)
+
+    for file, contents in data["templates"].items():
+        def_processor(file, contents, True)
+
+    console.print(variables)
+
     """
     if file.endswith(".html") or file.endswith(".md"):
         file_path = os.path.join(pages_dir, file)
