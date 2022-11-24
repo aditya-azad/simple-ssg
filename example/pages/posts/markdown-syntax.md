@@ -1,4 +1,4 @@
-{% template main_layout %}
+{% template main_layout.html %}
 
 {% def title Markdown Syntax Guide %}
 {% def date 2020-01-03 %}

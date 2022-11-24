@@ -124,8 +124,7 @@ def process_pages(data):
             if item[0] == "def":
                 if reject:
                     error(f"You are not allowed to use defs inside '{file}'")
-                if file not in variables:
-                    variables[file] = {}
+                variables.setdefault(file, {})
                 value = " ".join(item[2:]).strip()
                 var_name = item[1]
                 if not value:
@@ -163,6 +162,88 @@ def process_pages(data):
                 new_contents.append(item)
         return new_contents
 
+    def expand_processor(file, contents, reject=False):
+        new_contents = []
+        for item in contents:
+            if item[0] == "expand":
+                if reject:
+                    error(f"You are not allowed to use expand inside '{file}'")
+                try:
+                    new_contents += data["templates"][item[1]]
+                except Exception:
+                    error(f"Error expanding template '{item[1]}' for '{file}'")
+            else:
+                new_contents.append(item)
+        return new_contents
+
+    def template_processor(file, contents, reject=False):
+        new_contents = []
+        template = None
+        for item in contents:
+            if item[0] == "template":
+                if reject:
+                    error(f"You are not allowed to use template inside '{file}'")
+                if not template:
+                    template = item
+                else:
+                    error(
+                        f"You cannot have more than one template declarations inside '{file}'"
+                    )
+            else:
+                new_contents.append(item)
+
+        if template:
+            template_data = data["templates"][template[1]]
+            for i, item in enumerate(template_data):
+                if item[0] == "content":
+                    new_contents = template_data[:i] + new_contents
+                    if i + 1 < len(template_data):
+                        new_contents += template_data[i + 1 :]
+                    break
+        return new_contents
+
+    def content_processor(file, contents, reject=False):
+        new_contents = []
+        current_contents = ""
+        for i, item in enumerate(contents):
+            if item[0] == "_content":
+                if reject:
+                    error(f"You are not allowed to use _content inside '{file}'")
+                try:
+                    current_contents += item[1]
+                except Exception:
+                    error(f"Error expanding template '{item[1]}' for '{file}'")
+            else:
+                new_contents.append(("_content", current_contents))
+                current_contents = ""
+        if current_contents:
+            new_contents.append(("_content", current_contents))
+        return new_contents
+
+    def process_markdown(file, contents):
+        new_contents = []
+        file = file[:-3] + ".html"
+        for item in contents:
+            if item[0] == "_content":
+                try:
+                    new_contents.append(("_content", markdown.markdown(item[1])))
+                except Exception:
+                    error(f"Error expanding template '{item[1]}' for '{file}'")
+            else:
+                new_contents.append(item)
+        return file, new_contents
+
+    # markdown
+    for file, contents in data["pages"].copy().items():
+        if file.endswith(".md"):
+            del data["pages"][file]
+            file, contents = process_markdown(file, contents)
+            data["pages"][file] = contents
+    for file, contents in data["templates"].copy().items():
+        if file.endswith(".md"):
+            _, contents = process_markdown(file, contents)
+            data["templates"][file] = contents
+
     # def
     for file, contents in data["pages"].items():
         data["pages"][file] = def_processor(file, contents)
@@ -182,38 +263,36 @@ def process_pages(data):
         data["templates"][file] = globals_processor(file, contents)
 
     # expand
+    for file, contents in data["pages"].items():
+        data["pages"][file] = expand_processor(file, contents)
+    for file, contents in data["templates"].items():
+        data["templates"][file] = expand_processor(file, contents)
+
     # template
-    # markdown
+    for file, contents in data["pages"].items():
+        data["pages"][file] = template_processor(file, contents)
+    for file, contents in data["templates"].items():
+        data["templates"][file] = template_processor(file, contents)
+
+    # _content
+    for file, contents in data["pages"].items():
+        data["pages"][file] = content_processor(file, contents)
 
     console.print(data)
     console.print(variables)
 
-    """
-    if file.endswith(".html") or file.endswith(".md"):
-        file_path = os.path.join(pages_dir, file)
-        contents = generate_page(file_path, template_dir)
-        os.makedirs(
-            os.path.join(output_dir, leftover_path(pages_dir, base_pages_dir)),
-            exist_ok=True,
-        )
-        final_file_name = file
-        if file.endswith(".md"):
-            final_file_name = final_file_name[:-3] + ".html"
-        with open(
-            os.path.join(
-                output_dir,
-                leftover_path(pages_dir, base_pages_dir),
-                final_file_name,
-            ),
-            "w",
-            encoding="utf-8",
-        ) as file:
+    # write
+    for file_path, contents in data["pages"].items():
+        contents = contents[0][1]
+        if ("/" in file_path) or ("\\" in file_path):
+            head, tail = os.path.split(file_path)
+            base_path = os.path.join(data["_output_dir"], head)
+            file_path = tail
+            os.makedirs(base_path, exist_ok=True)
+        else:
+            base_path = data["_output_dir"]
+        with open(os.path.join(base_path, file_path), "w", encoding="utf-8") as file:
             file.write(contents)
-    elif os.path.isdir(os.path.join(pages_dir, file)):
-        process_pages(
-            base_pages_dir, os.path.join(pages_dir, file), output_dir, template_dir
-        )
-    """
 
 
 if __name__ == "__main__":
