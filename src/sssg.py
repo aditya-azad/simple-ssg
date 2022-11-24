@@ -226,7 +226,15 @@ def process_pages(data):
         for item in contents:
             if item[0] == "_content":
                 try:
-                    new_contents.append(("_content", markdown.markdown(item[1])))
+                    new_contents.append(
+                        (
+                            "_content",
+                            markdown.markdown(
+                                item[1],
+                                extensions=["fenced_code", "tables", "footnotes"],
+                            ),
+                        )
+                    )
                 except Exception:
                     error(f"Error expanding template '{item[1]}' for '{file}'")
             else:
@@ -278,11 +286,9 @@ def process_pages(data):
     for file, contents in data["pages"].items():
         data["pages"][file] = content_processor(file, contents)
 
-    console.print(data)
-    console.print(variables)
-
     # write
     for file_path, contents in data["pages"].items():
+        console.print(f"Writing: {file_path}")
         contents = contents[0][1]
         if ("/" in file_path) or ("\\" in file_path):
             head, tail = os.path.split(file_path)
