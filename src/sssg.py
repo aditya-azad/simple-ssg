@@ -15,15 +15,15 @@ from rich.theme import Theme
 console = Console(theme=Theme(inherit=False))
 
 
-def error(message):
+def error(msg):
     """Print error message and exit"""
-    console.print(f"[red]> {message}[/red]")
+    console.print(f"[red]> {msg}[/red]")
     sys.exit(1)
 
 
-def message(message):
+def message(msg):
     """Print a message to the screen"""
-    console.print(f"[green]>[/green] {message}")
+    console.print(f"[green]>[/green] {msg}")
 
 
 def parse_arguments():
@@ -51,7 +51,8 @@ def parse_arguments():
 
 
 def get_tree(input_dir):
-    """Walks the directory and returns the syntax tree assuming all files are compatible with templating engine"""
+    """Walks the directory and returns the syntax tree assuming all files are
+    compatible with templating engine"""
     tree = {}
     regex = r"{%(.*?)%}"
     input_root = ""
@@ -92,27 +93,27 @@ def get_tree(input_dir):
 
 def generate_data(input_dir, output_dir):
     """Reads and returns a convenient structure for processing files"""
-    d = {"_input_dir": input_dir, "_output_dir": output_dir}
-    d["_globals"] = None
-    d["public"] = False
+    data = {"_input_dir": input_dir, "_output_dir": output_dir}
+    data["_globals"] = None
+    data["public"] = False
 
     # config file read
-    config_file_path = os.path.join(args.inputdir, "config.yml")
+    config_file_path = os.path.join(input_dir, "config.yml")
     if os.path.exists(config_file_path):
-        with open(config_file_path) as file:
-            d["_globals"] = yaml.safe_load(file)
+        with open(config_file_path, "r", encoding="utf-8") as file:
+            data["_globals"] = yaml.safe_load(file)
 
     # directories read
     for file in os.listdir(input_dir):
         file_path = os.path.join(input_dir, file)
         if os.path.isdir(file_path):
             if file == "public":
-                d["public"] = True
+                data["public"] = True
             elif file == "templates":
-                d["templates"] = get_tree(os.path.join(input_dir, file))
+                data["templates"] = get_tree(os.path.join(input_dir, file))
             elif file == "pages":
-                d["pages"] = get_tree(os.path.join(input_dir, file))
-    return d
+                data["pages"] = get_tree(os.path.join(input_dir, file))
+    return data
 
 
 def process_public(public_dir, output_dir):
@@ -212,7 +213,7 @@ def process_pages(data):
     def content_processor(file, contents, reject=False):
         new_contents = []
         current_contents = ""
-        for i, item in enumerate(contents):
+        for item in contents:
             if item[0] == "_content":
                 if reject:
                     error(f"You are not allowed to use _content inside '{file}'")
@@ -295,7 +296,8 @@ def process_pages(data):
 
 
 def write_files(data):
-    """Write the files of pages into the output directory assuming there is only one _content block for all pages"""
+    """Write the files of pages into the output directory
+    assuming there is only one _content block for all pages"""
     for file_path, contents in data["pages"].items():
         message(f"Writing: {file_path}")
         contents = contents[0][1]
@@ -322,10 +324,10 @@ def minify(output_dir):
                 or file_path.endswith(".css")
                 or file_path.endswith(".js")
             ):
-                with open(file_path, "r", encoding="utf-8") as f:
-                    contents = "".join(f.readlines())
-                with open(file_path, "w", encoding="utf-8") as f:
-                    f.write(minify_html_onepass.minify(contents, minify_js=True))
+                with open(file_path, "r", encoding="utf-8") as fl:
+                    contents = "".join(fl.readlines())
+                with open(file_path, "w", encoding="utf-8") as fl:
+                    fl.write(minify_html_onepass.minify(contents, minify_js=True))
             # images
             if (
                 file_path.lower().endswith(".png")
@@ -336,7 +338,8 @@ def minify(output_dir):
                 pic.save(file_path, optimized=True, quality=95)
 
 
-if __name__ == "__main__":
+def run():
+    """Run the app"""
     console.print("[bold cyan]Simple SSG[/bold cyan]")
     args = parse_arguments()
     data = generate_data(args.inputdir, args.outputdir)
@@ -349,3 +352,7 @@ if __name__ == "__main__":
     write_files(data)
     # minify
     minify(data["_output_dir"])
+
+
+if __name__ == "__main__":
+    run()
