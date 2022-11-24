@@ -2,6 +2,7 @@
 
 - Minimal templating language
 - Markdown support
+- Minify HTML, CSS and JS files
 
 ``` text
 TODO
@@ -10,8 +11,6 @@ TODO
     - if statements
     - template props
 - blogging example
-- auto serve during development
-- minify files
 - compress images
 - improve performance
 ```

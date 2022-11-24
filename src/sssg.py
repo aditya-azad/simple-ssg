@@ -7,6 +7,7 @@ import sys
 import shutil
 import markdown
 import yaml
+import minify_html_onepass
 from rich.console import Console
 from rich.theme import Theme
 
@@ -291,7 +292,9 @@ def process_pages(data):
     for file, contents in data["pages"].items():
         data["pages"][file] = content_processor(file, contents)
 
-    # write
+
+def write_files(data):
+    """Write the files of pages into the output directory assuming there is only one _content block for all pages"""
     for file_path, contents in data["pages"].items():
         message(f"Writing: {file_path}")
         contents = contents[0][1]
@@ -306,6 +309,19 @@ def process_pages(data):
             file.write(contents)
 
 
+def minify(output_dir):
+    """Minify HTML, CSS and JS files present in output directory"""
+    message("Minifiying HTML, CSS and JS files...")
+    for root, _, files in os.walk(output_dir):
+        for file in files:
+            if file.endswith(".html") or file.endswith(".css") or file.endswith(".js"):
+                file_path = os.path.join(root, file)
+                with open(file_path, "r", encoding="utf-8") as f:
+                    contents = "".join(f.readlines())
+                with open(file_path, "w", encoding="utf-8") as f:
+                    f.write(minify_html_onepass.minify(contents, minify_js=True))
+
+
 if __name__ == "__main__":
     console.print("[bold cyan]Simple SSG[/bold cyan]")
     args = parse_arguments()
@@ -315,3 +331,7 @@ if __name__ == "__main__":
         process_public(os.path.join(data["_input_dir"], "public"), data["_output_dir"])
     # process pages
     process_pages(data)
+    # write files
+    write_files(data)
+    # minify
+    minify(data["_output_dir"])
