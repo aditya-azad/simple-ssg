@@ -1,5 +1,7 @@
 # Simple Static Site Generator
 
+Don't wanna download billions of bytes for just creating a simple website? Or don't wanna learn and re-learn a whole bunch of syntax every time you wanna customize the theme once in a blue moon? SSSG got you covered.
+
 - Minimal templating language
 - Markdown support
 - Minify HTML, CSS and JS files
@@ -14,10 +16,6 @@ TODO
 - blogging example
 - improve performance
 ```
-
-## Requirements
-
-- Python 3.10 (possibly 3.8 >= (not tested))
 
 ## Directory structure
 
@@ -87,6 +85,8 @@ You can use the defined variables using this. See `{% def <variable_name> <value
 
 ## How to use
 
+You need python 3.10 (not tested on other versions) to begin with
+
 ### Install
 
 Use pyinstaller for creating an executable. After you run this command, you will get your executable in `dist` folder.
@@ -100,6 +100,8 @@ Copy the `sssg` folder to anywhere on your system and add it to path to use the 
 ### From source
 
 ``` text
+python -m venv venv
+./venv/Scripts/activate
 pip install -r requirements.txt
 python ./src/sssg.py -i <input_directory> -o <output directory>
 ```
