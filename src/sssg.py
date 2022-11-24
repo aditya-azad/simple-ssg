@@ -15,8 +15,13 @@ console = Console(theme=Theme(inherit=False))
 
 def error(message):
     """Print error message and exit"""
-    console.print(message)
+    console.print(f"[red]> {message}[/red]")
     sys.exit(1)
+
+
+def message(message):
+    """Print a message to the screen"""
+    console.print(f"[green]>[/green] {message}")
 
 
 def parse_arguments():
@@ -110,12 +115,12 @@ def generate_data(input_dir, output_dir):
 
 def process_public(public_dir, output_dir):
     """Copies everything inside the public directory to the output dir"""
-    console.print("Copying over public files...")
+    message("Copying over public files...")
     shutil.copytree(public_dir, output_dir, dirs_exist_ok=True)
 
 
 def process_pages(data):
-    """Parse pages directory to create final files"""
+    """Parse pages and templates directory to create final files"""
     variables = {}
 
     def def_processor(file, contents, reject=False):
@@ -288,7 +293,7 @@ def process_pages(data):
 
     # write
     for file_path, contents in data["pages"].items():
-        console.print(f"Writing: {file_path}")
+        message(f"Writing: {file_path}")
         contents = contents[0][1]
         if ("/" in file_path) or ("\\" in file_path):
             head, tail = os.path.split(file_path)
@@ -302,6 +307,7 @@ def process_pages(data):
 
 
 if __name__ == "__main__":
+    console.print("[bold cyan]Simple SSG[/bold cyan]")
     args = parse_arguments()
     data = generate_data(args.inputdir, args.outputdir)
     # process public
