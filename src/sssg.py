@@ -8,6 +8,7 @@ import shutil
 import markdown
 import yaml
 import minify_html_onepass
+from PIL import Image
 from rich.console import Console
 from rich.theme import Theme
 
@@ -310,16 +311,29 @@ def write_files(data):
 
 
 def minify(output_dir):
-    """Minify HTML, CSS and JS files present in output directory"""
-    message("Minifiying HTML, CSS and JS files...")
+    """Minify HTML, CSS, JS and image files present in output directory"""
+    message("Minifiying files...")
     for root, _, files in os.walk(output_dir):
         for file in files:
-            if file.endswith(".html") or file.endswith(".css") or file.endswith(".js"):
-                file_path = os.path.join(root, file)
+            # html, css, js
+            file_path = os.path.join(root, file)
+            if (
+                file_path.endswith(".html")
+                or file_path.endswith(".css")
+                or file_path.endswith(".js")
+            ):
                 with open(file_path, "r", encoding="utf-8") as f:
                     contents = "".join(f.readlines())
                 with open(file_path, "w", encoding="utf-8") as f:
                     f.write(minify_html_onepass.minify(contents, minify_js=True))
+            # images
+            if (
+                file_path.lower().endswith(".png")
+                or file_path.lower().endswith(".jpg")
+                or file_path.lower().endswith(".jpeg")
+            ):
+                pic = Image.open(file_path)
+                pic.save(file_path, optimized=True, quality=95)
 
 
 if __name__ == "__main__":

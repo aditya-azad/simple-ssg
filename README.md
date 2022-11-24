@@ -3,6 +3,7 @@
 - Minimal templating language
 - Markdown support
 - Minify HTML, CSS and JS files
+- Losslessly compressed PNG and JP(E)G images
 
 ``` text
 TODO
@@ -11,7 +12,6 @@ TODO
     - if statements
     - template props
 - blogging example
-- compress images
 - improve performance
 ```
 
