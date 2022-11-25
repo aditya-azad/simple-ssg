@@ -12,6 +12,7 @@ TODO
 - templating language
     - for loops
     - if statements
+    - dynamic page creation
 - blogging example
 - improve performance
 ```
@@ -60,7 +61,7 @@ The language use tags similar to Jinja's `{% ... %}` syntax. There are currently
 
 ### `{% template <template_name> <props> %}`
 
-The `<template_name>` is used as template for the page. Basically, the contents of the page is is replaced with contents of the template. The replaced content is placed where `{% content %}` in the template used to be. Additionally props can be passed to the templates. They need to be variables therefore you need to first define them using `def` (see below). To use those props in the template file, you have to use `prop` tag (see below).
+The `template_name` is used as template for the page. Basically, the contents of the page is is replaced with contents of the template. The replaced content is placed where `content` in the template used to be. Additionally props can be passed to the templates. They need to be variables therefore you need to first define them using `def`. To use those props in the template file, you have to use `prop` tag.
 
 ### `{% expand <template_name> %}`
 
@@ -68,7 +69,7 @@ This tag is replaced with the contents of the template.
 
 ### `{% content %}`
 
-This is where the contents of the page are pasted when using `{% template <template_name> %}`.
+This is where the contents of the page are pasted when using `template`.
 
 ### `{% global <variable_name> %}`
 
@@ -76,11 +77,11 @@ You can use the variables defined in `config.yml` file using this tag.
 
 ### `{% def <variable_name> <value> %}`
 
-You can define variables inside the files of `pages` directory. These variables can be used in rest of the page using `{% use <variable_name> %}`. The order of definition does not matter since def statements are processed before use statements. `value` can be space separated. Basically everything after `variable_name` is part of `value`.
+You can define variables inside the files of `pages` directory. These variables can be used in the page using `use`. The order of definition does not matter since def statements are processed before use statements. `value` can be space separated. Basically everything after `variable_name` is part of `value`.
 
 ### `{% use <variable_name> %}`
 
-You can use the defined variables using this. See `{% def <variable_name> <value> %}` above.
+You can use the defined variables using this (see `def`).
 
 ### `{% prop <variable_name> %}`
 
