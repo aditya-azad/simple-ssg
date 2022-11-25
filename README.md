@@ -12,7 +12,6 @@ TODO
 - templating language
     - for loops
     - if statements
-    - template props
 - blogging example
 - improve performance
 ```
@@ -59,9 +58,9 @@ This is where you can store all the global variables that is accessable from `pa
 
 The language use tags similar to Jinja's `{% ... %}` syntax. There are currently following tags implemented. Templates themselves have can have other templates within them.
 
-### `{% template <template_name> %}`
+### `{% template <template_name> <props> %}`
 
-The `<template_name>` is used as template for the page. Basically, the contents of the page is is replaced with contents of the template. The replaced content is placed where `{% content %}` in the template used to be.
+The `<template_name>` is used as template for the page. Basically, the contents of the page is is replaced with contents of the template. The replaced content is placed where `{% content %}` in the template used to be. Additionally props can be passed to the templates. They need to be variables therefore you need to first define them using `def` (see below). To use those props in the template file, you have to use `prop` tag (see below).
 
 ### `{% expand <template_name> %}`
 
@@ -82,6 +81,10 @@ You can define variables inside the files of `pages` directory. These variables 
 ### `{% use <variable_name> %}`
 
 You can use the defined variables using this. See `{% def <variable_name> <value> %}` above.
+
+### `{% prop <variable_name> %}`
+
+You can fill the place with the variable passed to the template. Any other variable use will give you an error.
 
 ## How to use
 

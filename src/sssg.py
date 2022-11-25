@@ -156,12 +156,10 @@ def process_pages(data):
                 new_contents.append(item)
         return new_contents
 
-    def globals_processor(file, contents, reject=False):
+    def globals_processor(file, contents):
         new_contents = []
         for item in contents:
             if item[0] == "global":
-                if reject:
-                    error(f"You are not allowed to use global inside '{file}'")
                 try:
                     new_contents.append(("_content", data["_globals"][item[1]]))
                 except Exception:
@@ -170,12 +168,10 @@ def process_pages(data):
                 new_contents.append(item)
         return new_contents
 
-    def expand_processor(file, contents, reject=False):
+    def expand_processor(file, contents):
         new_contents = []
         for item in contents:
             if item[0] == "expand":
-                if reject:
-                    error(f"You are not allowed to use expand inside '{file}'")
                 try:
                     new_contents += data["templates"][item[1]]
                 except Exception:
@@ -184,13 +180,11 @@ def process_pages(data):
                 new_contents.append(item)
         return new_contents
 
-    def template_processor(file, contents, reject=False):
+    def template_processor(file, contents, ignore_props=False):
         new_contents = []
         template = None
         for item in contents:
             if item[0] == "template":
-                if reject:
-                    error(f"You are not allowed to use template inside '{file}'")
                 if not template:
                     template = item
                 else:
@@ -201,26 +195,49 @@ def process_pages(data):
                 new_contents.append(item)
 
         if template:
-            template_data = data["templates"][template[1]]
+            # expand template
+            try:
+                template_data = data["templates"][template[1]]
+            except Exception:
+                if file.endswith(".html"):
+                    file = file[:-5]
+                error(f"Cannot find template '{template[1]}' for file '{file}'")
+            template_props = set(template[2:])
             for i, item in enumerate(template_data):
                 if item[0] == "content":
                     new_contents = template_data[:i] + new_contents
                     if i + 1 < len(template_data):
                         new_contents += template_data[i + 1 :]
                     break
+            # expand props
+            if not ignore_props:
+                prop_expanded_contents = []
+                for i, item in enumerate(new_contents):
+                    if item[0] == "prop":
+                        if item[1] not in template_props:
+                            error(
+                                f"Prop '{item[1]}' not passed to the page '{template[1]}'"
+                            )
+                        else:
+                            prop_expanded_contents.append(
+                                ("_content", variables[file][item[1]])
+                            )
+                    else:
+                        prop_expanded_contents.append(item)
+                new_contents = prop_expanded_contents
+            # recurse to see if there is more tempaltes
+            new_contents = template_processor(file, new_contents, ignore_props)
         return new_contents
 
-    def content_processor(file, contents, reject=False):
+    def content_processor(file, contents):
         new_contents = []
         current_contents = ""
         for item in contents:
             if item[0] == "_content":
-                if reject:
-                    error(f"You are not allowed to use _content inside '{file}'")
                 try:
                     current_contents += item[1]
                 except Exception:
-                    error(f"Error expanding template '{item[1]}' for '{file}'")
+                    error(f"Error merging content '{item[1]}' for '{file}'")
             else:
                 new_contents.append(("_content", current_contents))
                 current_contents = ""
@@ -244,7 +261,7 @@ def process_pages(data):
                         )
                     )
                 except Exception:
-                    error(f"Error expanding template '{item[1]}' for '{file}'")
+                    error(f"Error error converting markdown '{item[1]}' for '{file}'")
             else:
                 new_contents.append(item)
         return file, new_contents
@@ -257,8 +274,7 @@ def process_pages(data):
             data["pages"][file] = contents
     for file, contents in data["templates"].copy().items():
         if file.endswith(".md"):
-            _, contents = process_markdown(file, contents)
-            data["templates"][file] = contents
+            error("You cannot have markdown templates")
 
     # def
     for file, contents in data["pages"].items():
@@ -285,10 +301,10 @@ def process_pages(data):
         data["templates"][file] = expand_processor(file, contents)
 
     # template
+    for file, contents in data["templates"].items():
+        data["templates"][file] = template_processor(file, contents, True)
     for file, contents in data["pages"].items():
         data["pages"][file] = template_processor(file, contents)
-    for file, contents in data["templates"].items():
-        data["templates"][file] = template_processor(file, contents)
 
     # _content
     for file, contents in data["pages"].items():

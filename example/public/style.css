@@ -22,14 +22,6 @@ body {
     color: var(--color-text);
 }
 
-.title {
-    font-style: normal;
-    font-size: 1.5em;
-    font-weight: bold;
-    border: 0;
-    margin-right: 10px;
-}
-
 img {
     max-width: 100%;
 }
@@ -80,7 +72,7 @@ nav {
 nav a {
     text-decoration: none;
     font-style: normal;
-    margin-right: 10px;
+    margin-right: 20px;
 }
 
 button {
@@ -125,5 +117,11 @@ footer {
 }
 
 footer a {
+    color: var(--color-dark-text);
+}
+
+.metatext {
+    font-style: italic;
+    font-size: smaller;
     color: var(--color-dark-text);
 }
