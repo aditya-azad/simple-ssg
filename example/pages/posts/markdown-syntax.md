@@ -1,6 +1,5 @@
 {% def title Markdown Syntax Guide %}
 {% def date 2020-01-03 %}
-{% def description Sample article showcasing basic Markdown syntax and formatting for HTML elements. %}
 {% def tags markdown, syntax %}
 
 {% template blog_post.html title date tags %}

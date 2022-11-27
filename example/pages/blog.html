@@ -2,9 +2,10 @@
 
 <h1 id="header">Blog Posts</h1>
 
-<div>
+<ul class="post-list">
     {% for page in _posts
-    <div>
-        <p>{$page.title$}</p>
-    </div> %}
-</div>
+    <li>
+        <div>{$page.title$}</div>
+        <div>{$page.date$}</div>
+    </li> %}
+</ul>

@@ -11,10 +11,12 @@ Don't wanna download billions of bytes for just creating a simple website? Or do
 TODO
 - templating language
     - for loops
+        - sorting
+        - slug refrences
     - if statements
     - dynamic page creation
 - blogging example
-- improve performance
+- robust parsing
 ```
 
 ## Directory structure
