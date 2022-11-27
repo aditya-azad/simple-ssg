@@ -8,6 +8,8 @@ import shutil
 import markdown
 import yaml
 import minify_html_onepass
+import operator
+from functools import reduce
 from PIL import Image
 from rich.console import Console
 from rich.theme import Theme
@@ -74,7 +76,7 @@ def get_tree(input_dir):
             tree[leftover] = []
             with open(file_path, "r", encoding="utf-8") as f:
                 page_contents = "".join(f.readlines())
-            matches = [match for match in re.finditer(regex, page_contents)]
+            matches = [match for match in re.finditer(regex, page_contents, flags=re.S)]
             curr_ptr = 0
             match_ptr = 0
             while match_ptr < len(matches):
@@ -266,6 +268,71 @@ def process_pages(data):
                 new_contents.append(item)
         return file, new_contents
 
+    def for_processor(file, contents):
+        new_contents = []
+        loop_var = ""
+        loop_vars = []
+        for item in contents:
+            if item[0] == "for":
+                # thing
+                loop_var = item[1].strip()
+                # in
+                if item[2] != "in":
+                    error(f"Syntax error in for loop for '{file}'")
+                # variable
+                if item[3].startswith("_"):
+                    root = item[3][1:].strip()
+                    for i, v in variables.items():
+                        if i.startswith(root):
+                            loop_vars.append(v)
+                # content
+                content = "".join(item[4:])
+                # loop
+                ## parse out the contents
+                regex = r"\{\$(.*?)\$\}"
+                parsed_content = []
+                curr = 0
+                for match in re.finditer(regex, content):
+                    var = match.group(1).strip()
+                    parsed_content.append(("_content", content[curr : match.start()]))
+                    var_tree = var.split(".")
+                    if var.startswith(loop_var):
+                        parsed_content.append(("loop_var", var_tree[1:]))
+                    elif var.startswith("this"):
+                        if len(var_tree) != 2:
+                            error(
+                                f"Invalid use of 'this' in '{file}'. Need to have exactly one '.'"
+                            )
+                        parsed_content.append(("use", var_tree[1]))
+                    elif var.startswith("_global"):
+                        if len(var_tree) != 2:
+                            error(
+                                f"Invalid use of '_global' in '{file}'. Need to have exactly one '.'"
+                            )
+                        parsed_content.append(("global", var_tree[1]))
+                    curr = match.end()
+                if curr < len(content):
+                    parsed_content.append(("_content", content[curr:]))
+                ## put in the contents
+                for v in loop_vars:
+                    for i in parsed_content:
+                        if i[0] == "loop_var":
+                            try:
+                                new_contents.append(
+                                    ("_content", reduce(operator.getitem, i[1], v))
+                                )
+                            except Exception:
+                                error(
+                                    f"Cannot find a key in the loop variable of for loop in '{file}'"
+                                )
+                        else:
+                            new_contents.append(i)
+                if not loop_vars:
+                    new_contents += parsed_content
+            else:
+                new_contents.append(item)
+        return new_contents
+
     # markdown
     for file, contents in data["pages"].copy().items():
         if file.endswith(".md"):
@@ -282,17 +349,21 @@ def process_pages(data):
     for file, contents in data["templates"].items():
         def_processor(file, contents, True)
 
-    # use
+    # for loops
     for file, contents in data["pages"].items():
-        data["pages"][file] = use_processor(file, contents)
-    for file, contents in data["templates"].items():
-        use_processor(file, contents, True)
+        data["pages"][file] = for_processor(file, contents)
 
     # globals
     for file, contents in data["pages"].items():
         data["pages"][file] = globals_processor(file, contents)
     for file, contents in data["templates"].items():
         data["templates"][file] = globals_processor(file, contents)
+
+    # use
+    for file, contents in data["pages"].items():
+        data["pages"][file] = use_processor(file, contents)
+    for file, contents in data["templates"].items():
+        use_processor(file, contents, True)
 
     # expand
     for file, contents in data["pages"].items():

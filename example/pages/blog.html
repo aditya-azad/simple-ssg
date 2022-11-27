@@ -1,0 +1,10 @@
+{% template main_layout.html %}
+
+<h1 id="header">Blog Posts</h1>
+
+<div>
+    {% for page in _posts
+    <div>
+        <p>{$page.title$}</p>
+    </div> %}
+</div>
