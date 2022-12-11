@@ -91,7 +91,7 @@ You can fill the place with the variable passed to the template. Any other varia
 
 ## How to use
 
-You need python 3.10 (not tested on other versions) to begin with
+You need python 3.10 (not tested on other versions) to begin with.
 
 ### Install
 
@@ -112,7 +112,7 @@ Copy the `sssg` folder to anywhere on your system and add it to path to use the 
 python -m venv venv
 ./venv/Scripts/activate
 pip install -r requirements.txt
-python ./src/sssg.py -i <input_directory> -o <output directory>
+python ./src/sssg.py -i <input_directory> -o <output_directory>
 ```
 
 Make sure output directory is empty. There is an example provided in `example` directory. Use that directory as the `input_directory` in the above command to see how it looks.
