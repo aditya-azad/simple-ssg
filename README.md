@@ -98,6 +98,9 @@ You need python 3.10 (not tested on other versions) to begin with
 Use pyinstaller for creating an executable. After you run this command, you will get your executable in `dist` folder.
 
 ``` text
+python -m venv venv
+./venv/Scripts/activate
+pip install -r requirements.txt
 pyinstaller ./src/sssg.py
 ```
 
