@@ -422,7 +422,12 @@ def minify(output_dir):
                 or file_path.lower().endswith(".jpeg")
             ):
                 pic = Image.open(file_path)
-                pic.save(file_path, optimized=True, quality=95)
+                # remove metadata
+                stripped = Image.new(pic.mode, pic.size)
+                stripped.putdata(pic.getdata())
+                if 'P' in pic.mode:
+                    stripped.putpalette(pic.getpalette())
+                stripped.save(file_path, optimized=True, quality=95)
 
 
 def run():

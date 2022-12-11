@@ -5,7 +5,7 @@ Don't wanna download billions of bytes for just creating a simple website? Or do
 - Minimal templating language
 - Markdown support
 - Minify HTML, CSS and JS files
-- Losslessly compressed PNG and JP(E)G images
+- Losslessly compressed PNG and JP(E)G images and remove metadata
 
 ``` text
 TODO
