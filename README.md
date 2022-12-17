@@ -79,7 +79,7 @@ You can fill the place with the variable passed to the template. Any other varia
 
 ### `{% for <variable_name> in <directory> <content> %}`
 
-You can also loop over files in a directory. You can have content on a separate line for readability. `<variable_name>` inside the loop is accessed using `{$<variable_name>$}`. You can access the `def`s inside those pages in the directory using the `.` operator. Optionally you can choose to sort using `_sort(<directory>,<sort_key>)` where `<sort_key>` is the `def` inside the file to sort by. Make sure there are no spaces if you are using sort. You can also reverse sort using `_rsort`. The `<variable_name>` has a special `_slug` variable that refers to the relative filepath of the page. You can use this to create anchor tags. See the example for clear usage.
+You can also loop over files in a directory. You can have content on a separate line for readability. `<variable_name>` inside the loop is accessed using `{$<variable_name>$}`. You can access the `def`s inside those pages in the directory using the `.` operator. Optionally you can choose to sort using `_sort(<directory>,<sort_key>)` where `<sort_key>` is the `def` inside the file to sort by. Make sure there are no spaces if you are using sort. You can also reverse sort using `_rsort`. The `<variable_name>` has a special `_slug` variable that refers to the relative filepath of the page. You can use this to create anchor tags. Nesting is not allowed. See the example for clear usage.
 
 ## How to use
 
