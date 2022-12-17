@@ -140,6 +140,12 @@ def process_pages(data):
                 if not value:
                     error(f"You must provide a value for '{var_name}' in '{file}'")
                 variables[file][var_name] = value
+                # add slug speciala variabel
+                if not variables[file].get("_slug") :
+                    slug = file.replace("\\", "/")
+                    if not slug.startswith("/"):
+                        slug = f"/{slug}"
+                    variables[file]["_slug"] = slug
             else:
                 new_contents.append(item)
         return new_contents
@@ -274,6 +280,8 @@ def process_pages(data):
         loop_vars = []
         for item in contents:
             if item[0] == "for":
+                sort_key = None
+                reversed = False
                 # thing
                 loop_var = item[1].strip()
                 # in
@@ -281,12 +289,21 @@ def process_pages(data):
                     error(f"Syntax error in for loop for '{file}'")
                 # variable
                 if item[3].startswith("_"):
-                    root = item[3][1:].strip()
+                    if item[3].find("sort(") != -1:
+                        opening = item[3].find("(")
+                        closing = item[3].rfind(")")
+                        starting = item[3].find(",")
+                        sort_key = item[3][starting + 1:closing].strip()
+                        if item[3].find("rsort(") != -1:
+                            reversed = True
+                        root = item[3][opening + 1:starting].strip()
+                    else:
+                        root = item[3].strip()
                     for i, v in variables.items():
                         if i.startswith(root):
                             loop_vars.append(v)
                 # content
-                content = "".join(item[4:])
+                content = " ".join(item[4:])
                 # loop
                 ## parse out the contents
                 regex = r"\{\$(.*?)\$\}"
@@ -313,7 +330,12 @@ def process_pages(data):
                     curr = match.end()
                 if curr < len(content):
                     parsed_content.append(("_content", content[curr:]))
-                ## put in the contents
+                # put in the contents
+                if sort_key:
+                    loop_vars = sorted(
+                        loop_vars,
+                        key=lambda x: x[sort_key],
+                        reverse=reversed)
                 for v in loop_vars:
                     for i in parsed_content:
                         if i[0] == "loop_var":

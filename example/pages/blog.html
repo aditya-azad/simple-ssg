@@ -3,9 +3,9 @@
 <h1 id="header">Blog Posts</h1>
 
 <ul class="post-list">
-    {% for page in _posts
+    {% for page in _rsort(posts,date)
     <li>
-        <div>{$page.title$}</div>
-        <div>{$page.date$}</div>
+      <div><a href="{$page._slug$}">{$page.title$}</a></div>
+      <div>{$page.date$}</div>
     </li> %}
 </ul>
