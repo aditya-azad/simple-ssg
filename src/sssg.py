@@ -34,7 +34,8 @@ def parse_arguments():
         prog="Simple SSG", description="Simple Static Site Generator"
     )
     parser.add_argument(
-        "-i", "--inputdir", help="root directory of your website's files", required=True
+        "-i", "--inputdir",
+        help="root directory of your website's files", required=True
     )
     parser.add_argument(
         "-o",
@@ -64,7 +65,7 @@ def get_tree(input_dir):
         while i < len(shorter_path) and longer_path[i] == shorter_path[i]:
             i += 1
         if i < len(longer_path) and (longer_path[i] == "/" or longer_path[i] == "\\"):
-            return longer_path[i + 1 :]
+            return longer_path[i + 1:]
         return longer_path[i:]
 
     for root, _, files in os.walk(input_dir):
@@ -76,12 +77,13 @@ def get_tree(input_dir):
             tree[leftover] = []
             with open(file_path, "r", encoding="utf-8") as f:
                 page_contents = "".join(f.readlines())
-            matches = [match for match in re.finditer(regex, page_contents, flags=re.S)]
+            matches = [match for match in re.finditer(
+                regex, page_contents, flags=re.S)]
             curr_ptr = 0
             match_ptr = 0
             while match_ptr < len(matches):
                 # parse content
-                content = page_contents[curr_ptr : matches[match_ptr].start()]
+                content = page_contents[curr_ptr: matches[match_ptr].start()]
                 tag = matches[match_ptr].group(1).strip().split(" ")
                 if content:
                     tree[leftover].append(("_content", content))
@@ -138,10 +140,11 @@ def process_pages(data):
                 value = " ".join(item[2:]).strip()
                 var_name = item[1]
                 if not value:
-                    error(f"You must provide a value for '{var_name}' in '{file}'")
+                    error(
+                        f"You must provide a value for '{var_name}' in '{file}'")
                 variables[file][var_name] = value
                 # add slug speciala variabel
-                if not variables[file].get("_slug") :
+                if not variables[file].get("_slug"):
                     slug = file.replace("\\", "/")
                     if not slug.startswith("/"):
                         slug = f"/{slug}"
@@ -159,7 +162,8 @@ def process_pages(data):
                 try:
                     new_contents.append(("_content", variables[file][item[1]]))
                 except Exception:
-                    error(f"Error processing variable '{item[1]}' for '{file}'")
+                    error(
+                        f"Error processing variable '{item[1]}' for '{file}'")
             else:
                 new_contents.append(item)
         return new_contents
@@ -169,9 +173,11 @@ def process_pages(data):
         for item in contents:
             if item[0] == "global":
                 try:
-                    new_contents.append(("_content", data["_globals"][item[1]]))
+                    new_contents.append(
+                        ("_content", data["_globals"][item[1]]))
                 except Exception:
-                    error(f"Error processing global variable '{item[1]}' for '{file}'")
+                    error(
+                        f"Error processing global variable '{item[1]}' for '{file}'")
             else:
                 new_contents.append(item)
         return new_contents
@@ -209,13 +215,14 @@ def process_pages(data):
             except Exception:
                 if file.endswith(".html"):
                     file = file[:-5]
-                error(f"Cannot find template '{template[1]}' for file '{file}'")
+                error(
+                    f"Cannot find template '{template[1]}' for file '{file}'")
             template_props = set(template[2:])
             for i, item in enumerate(template_data):
                 if item[0] == "content":
                     new_contents = template_data[:i] + new_contents
                     if i + 1 < len(template_data):
-                        new_contents += template_data[i + 1 :]
+                        new_contents += template_data[i + 1:]
                     break
             # expand props
             if not ignore_props:
@@ -264,12 +271,14 @@ def process_pages(data):
                             "_content",
                             markdown.markdown(
                                 item[1],
-                                extensions=["fenced_code", "tables", "footnotes"],
+                                extensions=["fenced_code",
+                                            "tables", "footnotes"],
                             ),
                         )
                     )
                 except Exception:
-                    error(f"Error error converting markdown '{item[1]}' for '{file}'")
+                    error(
+                        f"Error error converting markdown '{item[1]}' for '{file}'")
             else:
                 new_contents.append(item)
         return file, new_contents
@@ -305,13 +314,14 @@ def process_pages(data):
                 # content
                 content = " ".join(item[4:])
                 # loop
-                ## parse out the contents
+                # parse out the contents
                 regex = r"\{\$(.*?)\$\}"
                 parsed_content = []
                 curr = 0
                 for match in re.finditer(regex, content):
                     var = match.group(1).strip()
-                    parsed_content.append(("_content", content[curr : match.start()]))
+                    parsed_content.append(
+                        ("_content", content[curr: match.start()]))
                     var_tree = var.split(".")
                     if var.startswith(loop_var):
                         parsed_content.append(("loop_var", var_tree[1:]))
@@ -341,7 +351,8 @@ def process_pages(data):
                         if i[0] == "loop_var":
                             try:
                                 new_contents.append(
-                                    ("_content", reduce(operator.getitem, i[1], v))
+                                    ("_content", reduce(
+                                        operator.getitem, i[1], v))
                                 )
                             except Exception:
                                 error(
@@ -436,7 +447,8 @@ def minify(output_dir):
                 with open(file_path, "r", encoding="utf-8") as fl:
                     contents = "".join(fl.readlines())
                 with open(file_path, "w", encoding="utf-8") as fl:
-                    fl.write(minify_html_onepass.minify(contents, minify_js=True))
+                    fl.write(minify_html_onepass.minify(
+                        contents, minify_js=True))
             # images
             if (
                 file_path.lower().endswith(".png")
@@ -448,7 +460,7 @@ def minify(output_dir):
                 stripped = Image.new(pic.mode, pic.size)
                 stripped.putdata(pic.getdata())
                 if 'P' in pic.mode:
-                    stripped.putpalette(pic.getpalette())
+                    stripped.putpalette(pic.getpalette())  # type: ignore
                 stripped.save(file_path, optimized=True, quality=95)
 
 
@@ -459,7 +471,8 @@ def run():
     data = generate_data(args.inputdir, args.outputdir)
     # process public
     if data["public"]:
-        process_public(os.path.join(data["_input_dir"], "public"), data["_output_dir"])
+        process_public(os.path.join(
+            data["_input_dir"], "public"), data["_output_dir"])
     # process pages
     process_pages(data)
     # write files
