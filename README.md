@@ -9,11 +9,11 @@ Don't wanna download billions of bytes for just creating a simple website? Or do
 
 ## Directory structure
 
-There is a specific directory structure that all input directories must follow.
+There is a specific directory structure that an input directory must follow.
 
 ### `pages` directory
 
-All your concrete web pages are stored here. The pages in the directory are also the parse tree roots. Parser goes over all the pages one by one, parsing them and putting writing them to output directory. All the directories and pages inside this directory, conforms to URL schema.
+All your concrete web pages are stored here. The pages in the directory are also the parse tree roots. Parser goes over all the pages one by one, parsing them and writing them to output directory. All the directories and pages inside this directory conforms to URL schema.
 
 For example,
 
@@ -35,7 +35,7 @@ This will result in URLs:
 
 ### `public` directory
 
-Everything inside this is copied as it is to the output directory.
+Everything inside this is copied to the output directory.
 
 ### `template` directory
 
@@ -43,15 +43,15 @@ This is where all the templates for pages (and other templates templates) reside
 
 ### `config.yml` file
 
-This is where you can store all the global variables that is accessable from `pages` and `templates` directories.
+This is where you can store all the global variables that are accessable from `pages` and `templates` directories.
 
 ## Templating Language Syntax
 
-The language use tags similar to Jinja's `{% ... %}` syntax. There are currently following tags implemented. Templates themselves have can have other templates within them.
+The language use tags similar to Jinja's `{% ... %}` syntax. Templates themselves have can have other templates within them.
 
 ### `{% template <template_name> <props> %}`
 
-The `template_name` is used as template for the page. Basically, the contents of the page is is replaced with contents of the template. The replaced content is placed where `content` in the template used to be. Additionally props can be passed to the templates. They need to be variables therefore you need to first define them using `def`. To use those props in the template file, you have to use `prop` tag.
+The `template_name` is used as template for the page. Basically, the contents of the page is replaced with contents of the template. The replaced content is placed where `content` in the template used to be. Additionally props can be passed to the templates. They need to be variables therefore you need to first define them using `def`. To use those props in the template file, you have to use `prop` tag.
 
 ### `{% expand <template_name> %}`
 
