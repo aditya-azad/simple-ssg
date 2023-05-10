@@ -1,6 +1,6 @@
 # Simple Static Site Generator
 
-Don't wanna download billions of bytes for just creating a simple website? Or don't wanna learn and re-learn a whole bunch of syntax every time you wanna customize the theme once in a blue moon? SSSG got you covered.
+Don't wanna download billions of bytes for just creating a simple website? Or don't wanna learn and re-learn a whole bunch of syntax every time you want to customize the theme once in a blue moon? SSSG got you covered.
 
 - Minimal templating language
 - Markdown support
