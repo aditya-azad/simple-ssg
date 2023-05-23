@@ -31,7 +31,7 @@ def message(msg):
 def parse_arguments():
     """Parse and return comman dline arguments"""
     parser = argparse.ArgumentParser(
-        prog="Simple SSG", description="Simple Static Site Generator"
+        prog="sssg", description="Simple Static Site Generator"
     )
     parser.add_argument(
         "-i", "--inputdir",
