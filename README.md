@@ -87,7 +87,7 @@ You need python 3.10 (not tested on other versions) to begin with.
 
 ### Install
 
-Use pyinstaller for creating an executable. After you run this command, you will get your executable in `dist` folder.
+The executable will be created in `dist` folder.
 
 ``` text
 python -m venv venv
@@ -96,7 +96,7 @@ pip install -r requirements.txt
 pyinstaller ./src/sssg.py
 ```
 
-Copy the `sssg` folder to anywhere on your system and add it to path to use the executable from anywhere on your system.
+Add the `sssg` folder to path to use the executable from anywhere on your system.
 
 ### From source
 
@@ -107,11 +107,11 @@ pip install -r requirements.txt
 python ./src/sssg.py -i <input_directory> -o <output_directory>
 ```
 
-Make sure output directory is empty. There is an example provided in `example` directory. Use that directory as the `input_directory` in the above command to see how it looks.
+Make sure output directory is empty.
 
 ## Development Environment
 
-Assuming you are using python 3. Run the following command inside the output directory and go to `127.0.0.1:8000` in your browser. You have to refresh the page though.
+Run the following command inside the output directory and go to `127.0.0.1:8000` in your browser. You have to refresh the page though.
 
 ``` text
 python -m http.server 8000 --bind 127.0.0.1
