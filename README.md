@@ -39,7 +39,7 @@ Everything inside this is copied to the output directory.
 
 ### `template` directory
 
-This is where all the templates for pages (and other templates templates) reside.
+This is where all the templates for pages (and other templates) reside.
 
 ### `config.yml` file
 
