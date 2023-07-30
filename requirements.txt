@@ -1,0 +1,8 @@
+Markdown==3.4.4
+markdown-it-py==3.0.0
+mdurl==0.1.2
+minify_html_onepass==0.11.1
+Pillow==10.0.0
+Pygments==2.15.1
+PyYAML==6.0.1
+rich==13.5.0
