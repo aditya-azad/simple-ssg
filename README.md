@@ -91,6 +91,7 @@ Only spported in `ipynb`. If this string is present anywhere in a code cell, the
 Requirements
 - Python 3.10
 - Pygments (for syntax highlighting)
+- Pyinstaller (if creating executable)
 
 ### Install
 
