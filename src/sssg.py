@@ -2,6 +2,7 @@
 
 import re
 import argparse
+import json
 import os
 import sys
 import shutil
@@ -16,6 +17,13 @@ from rich.theme import Theme
 
 console = Console(theme=Theme(inherit=False))
 
+md_extensions = ["fenced_code", "tables", "footnotes", "codehilite"]
+
+
+def get_file_contents(file_path):
+    with open(file_path, "r", encoding="utf-8") as f:
+        return "".join(f.readlines())
+
 
 def error(msg):
     """Print error message and exit"""
@@ -26,6 +34,16 @@ def error(msg):
 def message(msg):
     """Print a message to the screen"""
     console.print(f"[green]>[/green] {msg}")
+
+
+def leftover_path(shorter_path, longer_path):
+    """Essentially subtract shorter path from longer_path and return the difference"""
+    i = 0
+    while i < len(shorter_path) and longer_path[i] == shorter_path[i]:
+        i += 1
+    if i < len(longer_path) and (longer_path[i] == "/" or longer_path[i] == "\\"):
+        return longer_path[i + 1:]
+    return longer_path[i:]
 
 
 def parse_arguments():
@@ -57,16 +75,7 @@ def get_tree(input_dir):
     """Walks the directory and returns the syntax tree assuming all files are
     compatible with templating engine"""
     tree = {}
-    regex = r"{%(.*?)%}"
     input_root = ""
-
-    def leftover_path(shorter_path, longer_path):
-        i = 0
-        while i < len(shorter_path) and longer_path[i] == shorter_path[i]:
-            i += 1
-        if i < len(longer_path) and (longer_path[i] == "/" or longer_path[i] == "\\"):
-            return longer_path[i + 1:]
-        return longer_path[i:]
 
     for root, _, files in os.walk(input_dir):
         if not input_root:
@@ -74,24 +83,80 @@ def get_tree(input_dir):
         for name in files:
             file_path = os.path.join(root, name)
             leftover = leftover_path(input_root, file_path)
-            tree[leftover] = []
-            with open(file_path, "r", encoding="utf-8") as f:
-                page_contents = "".join(f.readlines())
-            matches = [match for match in re.finditer(
-                regex, page_contents, flags=re.S)]
-            curr_ptr = 0
-            match_ptr = 0
-            while match_ptr < len(matches):
-                # parse content
-                content = page_contents[curr_ptr: matches[match_ptr].start()]
-                tag = matches[match_ptr].group(1).strip().split(" ")
-                if content:
-                    tree[leftover].append(("_content", content))
-                tree[leftover].append(tuple(tag))
-                curr_ptr = matches[match_ptr].end()
-                match_ptr += 1
-            if curr_ptr < len(page_contents):
-                tree[leftover].append(("_content", page_contents[curr_ptr:]))
+            if file_path.endswith(".ipynb"):
+                tree[leftover] = get_ipynb_tree(file_path)
+            else:
+                tree[leftover] = get_text_tree(get_file_contents(file_path))
+    return tree
+
+
+def get_ipynb_tree(file_path):
+    """convert ipynb to markdown"""
+    out = ""
+    regex = r"{%(.*?)%}"
+    with open(file_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    lang = data["metadata"]["language_info"]["name"]
+    for cell in data["cells"]:
+        if cell["cell_type"] == "markdown":
+            for text in cell["source"]:
+                out += text
+        elif cell["cell_type"] == "code":
+            code = ""
+            text_output = ""
+            plain_output = ""
+            for text in cell["source"]:
+                match = re.search(regex, text, flags=re.S)
+                if match and match.group(1).strip() == "out_only":
+                    code = ""
+                    break
+                else:
+                    code += text
+            if code:
+                out += f"```{lang}\n{code.strip()}\n```\n\n"
+            for output in cell["outputs"]:
+                if "text" in output:
+                    text_output += "".join(output["text"])
+                if "data" in output:
+                    data_block = output["data"]
+                    for data_type, content in data_block.items():
+                        match data_type:
+                            case "image/svg+xml":
+                                plain_output += "<svg width='100%'>" + "".join(map(lambda x: x.strip(), content)) + "</svg>"
+                            case "image/png":
+                                plain_output += f"<img src='data:image/png;base64, {content}' />"
+                            case "image/jpeg":
+                                plain_output += f"<img src='data:image/jpeg;base64, {content}' />"
+            if text_output:
+                out += f"```output\n{text_output.strip()}\n```\n\n"
+            if plain_output:
+                out += plain_output.strip()
+        # new cell = new paragaraph
+        if not out.endswith("\n"):
+            out += "\n\n"
+        elif out.endswith("\n") and not out.endswith("\n\n"):
+            out += "\n"
+    return get_text_tree(out)
+
+
+def get_text_tree(page_contents):
+    """convert text types to tree representation"""
+    regex = r"{%(.*?)%}"
+    tree = []
+    matches = [match for match in re.finditer(regex, page_contents, flags=re.S)]
+    curr_ptr = 0
+    match_ptr = 0
+    while match_ptr < len(matches):
+        # parse content
+        content = page_contents[curr_ptr: matches[match_ptr].start()]
+        tag = matches[match_ptr].group(1).strip().split(" ")
+        if content:
+            tree.append(("_content", content))
+        tree.append(tuple(tag))
+        curr_ptr = matches[match_ptr].end()
+        match_ptr += 1
+    if curr_ptr < len(page_contents):
+        tree.append(("_content", page_contents[curr_ptr:]))
     return tree
 
 
@@ -260,6 +325,7 @@ def process_pages(data):
             new_contents.append(("_content", current_contents))
         return new_contents
 
+
     def process_markdown(file, contents):
         new_contents = []
         file = file[:-3] + ".html"
@@ -267,21 +333,30 @@ def process_pages(data):
             if item[0] == "_content":
                 try:
                     new_contents.append(
-                        (
-                            "_content",
-                            markdown.markdown(
-                                item[1],
-                                extensions=["fenced_code",
-                                            "tables", "footnotes"],
-                            ),
-                        )
+                        ("_content", markdown.markdown(item[1], extensions=md_extensions))
                     )
                 except Exception:
-                    error(
-                        f"Error error converting markdown '{item[1]}' for '{file}'")
+                    error(f"Error error converting markdown '{item[1]}' for '{file}'")
             else:
                 new_contents.append(item)
         return file, new_contents
+
+
+    def process_ipynb(file, contents):
+        new_contents = []
+        file = file[:-6] + ".html"
+        for item in contents:
+            if item[0] == "_content":
+                try:
+                    new_contents.append(
+                        ("_content", markdown.markdown(item[1], extensions=md_extensions))
+                    )
+                except Exception:
+                    error(f"Error error converting markdown '{item[1]}' for '{file}'")
+            else:
+                new_contents.append(item)
+        return file, new_contents
+
 
     def for_processor(file, contents):
         new_contents = []
@@ -371,6 +446,16 @@ def process_pages(data):
         if file.endswith(".md"):
             del data["pages"][file]
             file, contents = process_markdown(file, contents)
+            data["pages"][file] = contents
+    for file, contents in data["templates"].copy().items():
+        if file.endswith(".md"):
+            error("You cannot have markdown templates")
+
+    # ipynb
+    for file, contents in data["pages"].copy().items():
+        if file.endswith(".ipynb"):
+            del data["pages"][file]
+            file, contents = process_ipynb(file, contents)
             data["pages"][file] = contents
     for file, contents in data["templates"].copy().items():
         if file.endswith(".md"):

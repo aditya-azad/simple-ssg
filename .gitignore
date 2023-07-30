@@ -164,3 +164,4 @@ cython_debug/
 # project specific
 inp_dir/
 out_dir/
+out/

@@ -4,6 +4,7 @@ Don't wanna download billions of bytes for just creating a simple website? Or do
 
 - Minimal templating language
 - Markdown support
+- Jupyter notebooks support (with JPEG, PNG and SVG images)
 - Minify HTML, CSS and JS files
 - Losslessly compressed PNG and JP(E)G images and remove metadata
 
@@ -81,6 +82,10 @@ You can fill the place with the variable passed to the template. Any other varia
 
 You can also loop over files in a directory. You can have content on a separate line for readability. `<variable_name>` inside the loop is accessed using `{$<variable_name>$}`. You can access the `def`s inside those pages in the directory using the `.` operator. Optionally you can choose to sort using `_sort(<directory>,<sort_key>)` where `<sort_key>` is the `def` inside the file to sort by. Make sure there are no spaces if you are using sort. You can also reverse sort using `_rsort`. The `<variable_name>` has a special `_slug` variable that refers to the relative filepath of the page. You can use this to create anchor tags. Nesting is not allowed. See the example for clear usage.
 
+### `{% out_only %}`
+
+Only spported in `ipynb`. If this string is present anywhere in a code cell, the code will not be displayed.
+
 ## How to use
 
 You need python 3.10 (not tested on other versions) to begin with.
@@ -92,7 +97,7 @@ The executable will be created in `dist` folder.
 ``` text
 python -m venv venv
 ./venv/Scripts/activate
-pip install -r requirements.txt
+pip install -r requirements.dev.txt
 pyinstaller ./src/sssg.py
 ```
 
@@ -103,7 +108,7 @@ Add the `sssg` folder to path to use the executable from anywhere on your system
 ``` text
 python -m venv venv
 ./venv/Scripts/activate
-pip install -r requirements.txt
+pip install -r requirements.dev.txt
 python ./src/sssg.py -i <input_directory> -o <output_directory>
 ```
 
