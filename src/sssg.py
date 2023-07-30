@@ -122,7 +122,10 @@ def get_ipynb_tree(file_path):
                     for data_type, content in data_block.items():
                         match data_type:
                             case "image/svg+xml":
-                                plain_output += "<svg width='100%'>" + "".join(map(lambda x: x.strip(), content)) + "</svg>"
+                                c = "".join(map(lambda x: x.strip(), content))
+                                start_idx = c.find("<svg")
+                                end_idx = c.rfind("/svg>")
+                                plain_output += c[start_idx:end_idx+5]
                             case "image/png":
                                 plain_output += f"<img src='data:image/png;base64, {content}' />"
                             case "image/jpeg":

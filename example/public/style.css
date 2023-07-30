@@ -26,36 +26,6 @@ img {
     max-width: 100%;
 }
 
-svg > * {
-    stroke: black;
-    fill: black;
-}
-
-ellipse {
-    fill: black;
-    stroke: white;
-}
-
-polygon {
-    stroke: black;
-    fill: black;
-}
-
-path {
-    stroke: white;
-    fill: white;
-}
-
-text {
-    fill: white;
-    stroke: white;
-}
-
-.edge > * {
-    fill: white;
-    stroke: white;
-}
-
 h1,
 h2,
 h3,
