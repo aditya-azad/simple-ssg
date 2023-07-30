@@ -1,9 +1,14 @@
+# TODO
+
+- [ ] jupyter image support
+
 # Simple Static Site Generator
 
 Don't wanna download billions of bytes for just creating a simple website? Or don't wanna learn and re-learn a whole bunch of syntax every time you want to customize the theme once in a blue moon? SSSG got you covered.
 
 - Minimal templating language
 - Markdown support
+- Jupyter notebooks support (text only)
 - Minify HTML, CSS and JS files
 - Losslessly compressed PNG and JP(E)G images and remove metadata
 
@@ -92,7 +97,7 @@ The executable will be created in `dist` folder.
 ``` text
 python -m venv venv
 ./venv/Scripts/activate
-pip install -r requirements.txt
+pip install -r requirements.dev.txt
 pyinstaller ./src/sssg.py
 ```
 
@@ -103,7 +108,7 @@ Add the `sssg` folder to path to use the executable from anywhere on your system
 ``` text
 python -m venv venv
 ./venv/Scripts/activate
-pip install -r requirements.txt
+pip install -r requirements.dev.txt
 python ./src/sssg.py -i <input_directory> -o <output_directory>
 ```
 
