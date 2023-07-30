@@ -103,7 +103,8 @@ def get_ipynb_tree(file_path):
                 out += text
         elif cell["cell_type"] == "code":
             code = ""
-            code_output = ""
+            text_output = ""
+            plain_output = ""
             for text in cell["source"]:
                 match = re.search(regex, text, flags=re.S)
                 if match and match.group(1).strip() == "out_only":
@@ -114,9 +115,22 @@ def get_ipynb_tree(file_path):
             if code:
                 out += f"```{lang}\n{code.strip()}\n```\n\n"
             for output in cell["outputs"]:
-                code_output += "".join(output["text"])
-            if code_output:
-                out += f"```output\n{code_output.strip()}\n```\n\n"
+                if "text" in output:
+                    text_output += "".join(output["text"])
+                if "data" in output:
+                    data_block = output["data"]
+                    for data_type, content in data_block.items():
+                        match data_type:
+                            case "image/svg+xml":
+                                plain_output += "<svg width='100%'>" + "".join(map(lambda x: x.strip(), content)) + "</svg>"
+                            case "image/png":
+                                plain_output += f"<img src='data:image/png;base64, {content}' />"
+                            case "image/jpeg":
+                                plain_output += f"<img src='data:image/jpeg;base64, {content}' />"
+            if text_output:
+                out += f"```output\n{text_output.strip()}\n```\n\n"
+            if plain_output:
+                out += plain_output.strip()
         # new cell = new paragaraph
         if not out.endswith("\n"):
             out += "\n\n"

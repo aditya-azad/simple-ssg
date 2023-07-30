@@ -1,14 +1,10 @@
-# TODO
-
-- [ ] jupyter image support
-
 # Simple Static Site Generator
 
 Don't wanna download billions of bytes for just creating a simple website? Or don't wanna learn and re-learn a whole bunch of syntax every time you want to customize the theme once in a blue moon? SSSG got you covered.
 
 - Minimal templating language
 - Markdown support
-- Jupyter notebooks support (text only)
+- Jupyter notebooks support (with JPEG, PNG and SVG images)
 - Minify HTML, CSS and JS files
 - Losslessly compressed PNG and JP(E)G images and remove metadata
 
@@ -85,6 +81,10 @@ You can fill the place with the variable passed to the template. Any other varia
 ### `{% for <variable_name> in <directory> <content> %}`
 
 You can also loop over files in a directory. You can have content on a separate line for readability. `<variable_name>` inside the loop is accessed using `{$<variable_name>$}`. You can access the `def`s inside those pages in the directory using the `.` operator. Optionally you can choose to sort using `_sort(<directory>,<sort_key>)` where `<sort_key>` is the `def` inside the file to sort by. Make sure there are no spaces if you are using sort. You can also reverse sort using `_rsort`. The `<variable_name>` has a special `_slug` variable that refers to the relative filepath of the page. You can use this to create anchor tags. Nesting is not allowed. See the example for clear usage.
+
+### `{% out_only %}`
+
+Only spported in `ipynb`. If this string is present anywhere in a code cell, the code will not be displayed.
 
 ## How to use
 

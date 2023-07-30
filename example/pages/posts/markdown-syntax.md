@@ -69,6 +69,12 @@ The blockquote element represents content that is quoted from another source, op
 </html>
 ```
 
+## images
+
+Sadly `![]()` syntax is not supported. You need to use normal `img` tag.
+
+<img src="/cover.png" title="title" alt="alt text">
+
 ## List Types
 
 #### Ordered List
