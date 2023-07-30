@@ -88,7 +88,9 @@ Only spported in `ipynb`. If this string is present anywhere in a code cell, the
 
 ## How to use
 
-You need python 3.10 (not tested on other versions) to begin with.
+Requirements
+- Python 3.10
+- Pygments (for syntax highlighting)
 
 ### Install
 
@@ -97,7 +99,7 @@ The executable will be created in `dist` folder.
 ``` text
 python -m venv venv
 ./venv/Scripts/activate
-pip install -r requirements.dev.txt
+pip install -r requirements.txt
 pyinstaller ./src/sssg.py
 ```
 
@@ -108,7 +110,7 @@ Add the `sssg` folder to path to use the executable from anywhere on your system
 ``` text
 python -m venv venv
 ./venv/Scripts/activate
-pip install -r requirements.dev.txt
+pip install -r requirements.txt
 python ./src/sssg.py -i <input_directory> -o <output_directory>
 ```
 
