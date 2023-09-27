@@ -1,3 +1,31 @@
+# Under construction
+
+- write tests
+
+- arch
+    - legend: ->> parallelizable stuff, -> non parallelizable
+    - public ->> compress ->> copy
+      non-public ->> to html ->> to struct -> dep trees ->> gen ->> minify ->> copy
+    - to html: jupyter, markdown, html
+    - to struct: for parsing
+    - dep trees: for checking for cycles
+
+- data structs
+    - global_vars: stores the global variables visible to all files
+        - _pages: slugs of files in pages dir (does not recurse)
+        - _pages_<subdir>..: files in a sub dir of pages
+        - vars defined in config file
+    - gen_file: templates and final files
+        - context_vars: variables passed in through props
+        - slug: the relative path (empty in case of template file)
+        - depends_on: all the files that this file depends on
+        - contents: the blocks of content defined as special data structure which can be compressed into final html form
+
+- variables can be kept track of in a stack like data structure
+
+- use keyword
+    - handles globals, props and defs
+
 # Simple Static Site Generator
 
 Don't wanna download billions of bytes for just creating a simple website? Or don't wanna learn and re-learn a whole bunch of syntax every time you want to customize the theme once in a blue moon? SSSG got you covered.
@@ -6,7 +34,7 @@ Don't wanna download billions of bytes for just creating a simple website? Or do
 - Markdown support
 - Jupyter notebooks support (with JPEG, PNG and SVG images)
 - Minify HTML, CSS and JS files
-- Losslessly compressed PNG and JP(E)G images and remove metadata
+- Losslessly compress PNG and JP(E)G images and remove metadata
 
 ## Directory structure
 
@@ -62,21 +90,9 @@ This tag is replaced with the contents of the template.
 
 This is where the contents of the page are pasted when using `template`.
 
-### `{% global <variable_name> %}`
-
-You can use the variables defined in `config.yml` file using this tag.
-
-### `{% def <variable_name> <value> %}`
-
-You can define variables inside the files of `pages` directory. These variables can be used in the page using `use`. The order of definition does not matter since def statements are processed before use statements. `value` can be space separated. Basically everything after `variable_name` is part of `value`.
-
 ### `{% use <variable_name> %}`
 
-You can use the defined variables using this (see `def`).
-
-### `{% prop <variable_name> %}`
-
-You can fill the place with the variable passed to the template. Any other variable use will give you an error.
+You can use the defined variables passed as props or read from global config file
 
 ### `{% for <variable_name> in <directory> <content> %}`
 
@@ -84,7 +100,7 @@ You can also loop over files in a directory. You can have content on a separate 
 
 ### `{% out_only %}`
 
-Only spported in `ipynb`. If this string is present anywhere in a code cell, the code will not be displayed.
+Only spported in `.ipynb` files. If this string is present anywhere in a code cell, the code will not be displayed.
 
 ## How to use
 
