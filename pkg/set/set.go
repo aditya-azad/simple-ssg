@@ -1,22 +1,22 @@
 package set
 
-type stringSet struct {
-	mp map[string]bool
+type Set[K comparable] struct {
+	mp map[K]bool
 }
 
-func NewStringSet(vals ...string) *stringSet {
-	st := &stringSet{map[string]bool{}}
+func NewSet[K comparable](vals ...K) *Set[K] {
+	st := &Set[K]{map[K]bool{}}
 	for _, val := range vals {
 		st.mp[val] = true
 	}
 	return st
 }
 
-func (s *stringSet) Add(val string) {
+func (s *Set[K]) Add(val K) {
 	s.mp[val] = true
 }
 
-func (s *stringSet) Has(val string) bool {
+func (s *Set[K]) Has(val K) bool {
 	_, ok := s.mp[val]
 	return ok
 }
