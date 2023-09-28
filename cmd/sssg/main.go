@@ -9,6 +9,12 @@ import (
 	"github.com/aditya-azad/simple-ssg/pkg/set"
 )
 
+type genFile struct {
+	contextVars  map[string]string
+	slug         string
+	dependencies set.Set[string]
+}
+
 func isDir(path *string) bool {
 	info, err := os.Stat(*path)
 	if err != nil || !info.IsDir() {
@@ -33,8 +39,8 @@ func validateInputDirectoryStructure(path *string) {
 	if err != nil {
 		logging.Error("Unable to get absolute path of input directory")
 	}
-	validDirectories := set.NewStringSet("public", "templates", "pages")
-	validFiles := set.NewStringSet("config.yml")
+	validDirectories := set.NewSet("public", "templates", "pages")
+	validFiles := set.NewSet("config.yml")
 	if err != nil {
 		logging.Error("Unable to read the input directory")
 	}
@@ -49,6 +55,10 @@ func validateInputDirectoryStructure(path *string) {
 	}
 }
 
+func generateHTMLFiles() {
+
+}
+
 func main() {
 	// parse args
 	inputDir := flag.String("in", ".", "Input directory")
@@ -59,4 +69,12 @@ func main() {
 	validateIsDir(inputDir)
 	validateIsDir(outputDir)
 	validateInputDirectoryStructure(inputDir)
+
+	// read config file and generate globals
+	// read and convert files
+	generatedHTMLFiles := generateHTMLFiles()
+	// parse files
+	// compress files
+	// files to public
+	// compress and copy public files
 }
