@@ -2,19 +2,51 @@ package main
 
 import (
 	"flag"
-	"github.com/aditya-azad/simple-ssg/pkg/logging"
 	"os"
+	"path/filepath"
+
+	"github.com/aditya-azad/simple-ssg/pkg/logging"
+	"github.com/aditya-azad/simple-ssg/pkg/set"
 )
 
-func validateDirectoryPath(path *string) bool {
+func isDir(path *string) bool {
 	info, err := os.Stat(*path)
-	if err != nil {
-		return false
-	}
-	if !info.IsDir() {
+	if err != nil || !info.IsDir() {
 		return false
 	}
 	return true
+}
+
+func validateIsDir(path *string) {
+	info, err := os.Stat(*path)
+	if err != nil || !info.IsDir() {
+		logging.Error("\"%s\" is not a valid directory path", *path)
+	}
+}
+
+func validateInputDirectoryStructure(path *string) {
+	files, err := os.ReadDir(*path)
+	if err != nil {
+		logging.Error("Unable to read contents of input directory")
+	}
+	currDir, err := filepath.Abs(*path)
+	if err != nil {
+		logging.Error("Unable to get absolute path of input directory")
+	}
+	validDirectories := set.NewStringSet("public", "templates", "pages")
+	validFiles := set.NewStringSet("config.yml")
+	if err != nil {
+		logging.Error("Unable to read the input directory")
+	}
+	for _, file := range files {
+		filePath := filepath.Join(currDir, file.Name())
+		isFileDir := isDir(&filePath)
+		if isFileDir && !validDirectories.Has(file.Name()) {
+			logging.Error("Illegal directory \"%s\" in input directory", file.Name())
+		} else if !isFileDir && !validFiles.Has(file.Name()) {
+			logging.Error("Illegal file \"%s\" in input directory", file.Name())
+		}
+	}
 }
 
 func main() {
@@ -22,11 +54,9 @@ func main() {
 	inputDir := flag.String("in", ".", "Input directory")
 	outputDir := flag.String("out", "", "Output directory")
 	flag.Parse()
+
 	// validate args
-	if !validateDirectoryPath(inputDir) {
-		logging.Error("Error reading input directory \"%s\"", *inputDir)
-	}
-	if !validateDirectoryPath(outputDir) {
-		logging.Error("Error reading output directory \"%s\"", *outputDir)
-	}
+	validateIsDir(inputDir)
+	validateIsDir(outputDir)
+	validateInputDirectoryStructure(inputDir)
 }
