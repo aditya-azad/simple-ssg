@@ -16,12 +16,12 @@
         - _pages_<subdir>..: files in a sub dir of pages
         - vars defined in config file
     - gen_file: templates and final files
-        - context_vars: variables passed in through props
+        - context_vars: vars passed in through props
         - slug: the relative path (empty in case of template file)
         - depends_on: all the files that this file depends on
         - contents: the blocks of content defined as special data structure which can be compressed into final html form
 
-- variables can be kept track of in a stack like data structure
+- props passed like abc=def
 
 - use keyword
     - handles globals, props and defs
