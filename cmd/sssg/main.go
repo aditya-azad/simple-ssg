@@ -7,13 +7,8 @@ import (
 
 	"github.com/aditya-azad/simple-ssg/pkg/logging"
 	"github.com/aditya-azad/simple-ssg/pkg/set"
+	"gopkg.in/yaml.v2"
 )
-
-type genFile struct {
-	contextVars  map[string]string
-	slug         string
-	dependencies set.Set[string]
-}
 
 func isDir(path *string) bool {
 	info, err := os.Stat(*path)
@@ -40,7 +35,7 @@ func validateInputDirectoryStructure(path *string) {
 		logging.Error("Unable to get absolute path of input directory")
 	}
 	validDirectories := set.NewSet("public", "templates", "pages")
-	validFiles := set.NewSet("config.yml")
+	validFiles := set.NewSet("globals.yml")
 	if err != nil {
 		logging.Error("Unable to read the input directory")
 	}
@@ -55,8 +50,19 @@ func validateInputDirectoryStructure(path *string) {
 	}
 }
 
-func generateHTMLFiles() {
+func readGlobals(inputDir *string) map[string]string {
+	file, err := os.ReadFile(filepath.Join(*inputDir, "globals.yml"))
+	if err != nil {
+		logging.Error("Error reading globals file")
+	}
+	data := map[string]string{}
+	if err := yaml.Unmarshal(file, &data); err != nil {
+		logging.Error("Error unmarshalling globals file")
+	}
+	return data
+}
 
+func generateHTMLFiles() {
 }
 
 func main() {
@@ -70,9 +76,10 @@ func main() {
 	validateIsDir(outputDir)
 	validateInputDirectoryStructure(inputDir)
 
-	// read config file and generate globals
+	// read globals file and generate globals
+	_ = readGlobals(inputDir)
 	// read and convert files
-	generatedHTMLFiles := generateHTMLFiles()
+	//generatedHTMLFiles := generateHTMLFiles()
 	// parse files
 	// compress files
 	// files to public
