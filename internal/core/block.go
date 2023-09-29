@@ -4,11 +4,6 @@ type Block interface {
 	expand()
 }
 
-type TemplateBlock struct {
-	name  string
-	props map[string]string
-}
-
 type ExpandBlock struct {
 	name string
 }
