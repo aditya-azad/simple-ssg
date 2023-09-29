@@ -1,26 +1,29 @@
 package core
 
 type Block interface {
-	expand()
 }
 
 type ExpandBlock struct {
-	name string
+	Name string
 }
 
 type ContentBlock struct {
-	content string
+	Content string
 }
 
 type UseBlock struct {
-	name string
+	Name string
 }
 
 type ForBlock struct {
-	name     string
-	iterable string
-	content  string
+	Name     string
+	Iterable string
+	Content  string
 }
 
 type OutOnlyBlock struct {
+}
+
+type RawBlock struct {
+	Data []byte
 }

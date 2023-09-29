@@ -5,9 +5,9 @@ import (
 )
 
 type FileNode struct {
-	slug          string
-	template      string
-	templateProps map[string]string
-	expands       set.Set[string]
-	blocks        []Block
+	Slug          string
+	Template      string
+	TemplateProps map[string]string
+	Expands       set.Set[string]
+	Blocks        []Block
 }
