@@ -10,6 +10,9 @@ import (
 	"github.com/aditya-azad/simple-ssg/internal/core"
 	"github.com/aditya-azad/simple-ssg/pkg/logging"
 	"github.com/aditya-azad/simple-ssg/pkg/set"
+	"github.com/gomarkdown/markdown"
+	"github.com/gomarkdown/markdown/html"
+	"github.com/gomarkdown/markdown/parser"
 	"gopkg.in/yaml.v2"
 )
 
@@ -65,10 +68,35 @@ func readGlobals(inputDir *string) map[string]string {
 	return data
 }
 
+func convertMarkdownToHTML(data []byte) []byte {
+	extensions := parser.CommonExtensions | parser.AutoHeadingIDs | parser.NoEmptyLineBeforeBlock
+	p := parser.NewWithExtensions(extensions)
+	doc := p.Parse(data)
+	htmlFlags := html.CommonFlags | html.HrefTargetBlank
+	opts := html.RendererOptions{Flags: htmlFlags}
+	renderer := html.NewRenderer(opts)
+	return markdown.Render(doc, renderer)
+}
+
+func convertIpynbToHTML(data []byte) []byte {
+	return data
+}
+
+func buildBlockChainFromRawData(data []byte, fileExtension string) {
+	htmlData := data
+	switch fileExtension {
+	case ".md":
+		htmlData = convertMarkdownToHTML(data)
+	case ".html":
+	case ".ipynb":
+		htmlData = convertIpynbToHTML(data)
+	default:
+		logging.Error("Unknown file type %s received", fileExtension)
+	}
+}
+
 func generateFileNodes(inputDir *string) map[string]core.FileNode {
 	nodes := map[string]core.FileNode{}
-	templatesDir := filepath.Join(*inputDir, "templates/")
-	pagesDir := filepath.Join(*inputDir, "pages/")
 	var wg sync.WaitGroup
 	var mut sync.Mutex
 
@@ -82,6 +110,7 @@ func generateFileNodes(inputDir *string) map[string]core.FileNode {
 		if err != nil {
 			logging.Error("Error reading file: %s", err.Error())
 		}
+		buildBlockChainFromRawData(dat, filepath.Ext(rel))
 		mut.Lock()
 		nodes[rel] = core.FileNode{
 			FilePath:      rel,
@@ -93,7 +122,7 @@ func generateFileNodes(inputDir *string) map[string]core.FileNode {
 		mut.Unlock()
 	}
 
-	for _, dir := range []string{templatesDir, pagesDir} {
+	for _, dir := range []string{filepath.Join(*inputDir, "templates/"), filepath.Join(*inputDir, "pages/")} {
 		if filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				logging.Error("Error reading file: %s", err.Error())
@@ -126,12 +155,7 @@ func main() {
 	// read globals file and generate globals
 	_ = readGlobals(inputDir)
 	// read and convert files
-	nodes := generateFileNodes(inputDir)
-	for key, node := range nodes {
-		fmt.Println(key)
-		fmt.Println(node)
-	}
-	fmt.Println(len(nodes))
+	_ = generateFileNodes(inputDir)
 	// parse files
 	// compress files
 	// files to public
