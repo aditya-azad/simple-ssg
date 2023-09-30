@@ -74,12 +74,9 @@ func generateFileNodes(inputDir *string) map[string]core.FileNode {
 
 	nodeGenerator := func(path string) {
 		defer wg.Done()
-		rel, err := filepath.Rel(templatesDir, path)
+		rel, err := filepath.Rel(*inputDir, path)
 		if err != nil {
-			rel, err = filepath.Rel(pagesDir, path)
-			if err != nil {
-				logging.Error("Error generating relative path: %s", err.Error())
-			}
+			logging.Error("Error generating relative path: %s", err.Error())
 		}
 		dat, err := os.ReadFile(path)
 		if err != nil {
@@ -130,8 +127,9 @@ func main() {
 	_ = readGlobals(inputDir)
 	// read and convert files
 	nodes := generateFileNodes(inputDir)
-	for _, node := range nodes {
-		fmt.Println(string(node.Blocks[0].(core.RawBlock).Data))
+	for key, node := range nodes {
+		fmt.Println(key)
+		fmt.Println(node)
 	}
 	fmt.Println(len(nodes))
 	// parse files
