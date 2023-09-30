@@ -5,7 +5,7 @@ import (
 )
 
 type FileNode struct {
-	Slug          string
+	FilePath      string
 	Template      string
 	TemplateProps map[string]string
 	Expands       set.Set[string]

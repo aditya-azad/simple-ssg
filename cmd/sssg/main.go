@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/aditya-azad/simple-ssg/internal/core"
 	"github.com/aditya-azad/simple-ssg/pkg/logging"
@@ -64,69 +65,54 @@ func readGlobals(inputDir *string) map[string]string {
 	return data
 }
 
-func generateFileNodes(inputDir *string) {
-	templateNodes := map[string]core.FileNode{}
-	pagesNodes := map[string]core.FileNode{}
+func generateFileNodes(inputDir *string) map[string]core.FileNode {
+	nodes := map[string]core.FileNode{}
 	templatesDir := filepath.Join(*inputDir, "templates/")
 	pagesDir := filepath.Join(*inputDir, "pages/")
+	var wg sync.WaitGroup
+	var mut sync.Mutex
 
-	templateTraverser := func(path string, info os.FileInfo, err error) error {
+	nodeGenerator := func(path string) {
+		defer wg.Done()
+		rel, err := filepath.Rel(templatesDir, path)
 		if err != nil {
-			logging.Error("Error reading template file: %s", err.Error())
-		}
-		if !isDir(&path) {
-			rel, err := filepath.Rel(templatesDir, path)
+			rel, err = filepath.Rel(pagesDir, path)
 			if err != nil {
-				logging.Error("Error reading template file: %s", err.Error())
-			}
-			dat, err := os.ReadFile(path)
-			if err != nil {
-				logging.Error("Error reading template file: %s", err.Error())
-			}
-			templateNodes[rel] = core.FileNode{
-				Slug:          "",
-				Template:      "",
-				TemplateProps: map[string]string{},
-				Expands:       *set.NewSet(""),
-				Blocks:        []core.Block{core.RawBlock{Data: dat}},
+				logging.Error("Error generating relative path: %s", err.Error())
 			}
 		}
-		return nil
-	}
-
-	pagesTraverser := func(path string, info os.FileInfo, err error) error {
+		dat, err := os.ReadFile(path)
 		if err != nil {
-			logging.Error("Error reading page file: %s", err.Error())
+			logging.Error("Error reading file: %s", err.Error())
 		}
-		if !isDir(&path) {
-			rel, err := filepath.Rel(pagesDir, path)
-			if err != nil {
-				logging.Error("Error reading page file: %s", err.Error())
-			}
-			dat, err := os.ReadFile(path)
-			if err != nil {
-				logging.Error("Error reading page file: %s", err.Error())
-			}
-			pagesNodes[rel] = core.FileNode{
-				Slug:          rel,
-				Template:      "",
-				TemplateProps: map[string]string{},
-				Expands:       *set.NewSet(""),
-				Blocks:        []core.Block{core.RawBlock{Data: dat}},
-			}
+		mut.Lock()
+		nodes[rel] = core.FileNode{
+			FilePath:      rel,
+			Template:      "",
+			TemplateProps: map[string]string{},
+			Expands:       *set.NewSet(""),
+			Blocks:        []core.Block{core.RawBlock{Data: dat}},
 		}
-		return nil
+		mut.Unlock()
 	}
 
-	err := filepath.Walk(templatesDir, templateTraverser)
-	if err != nil {
-		logging.Error("Error walking files in templates dir: %s", err.Error())
+	for _, dir := range []string{templatesDir, pagesDir} {
+		if filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				logging.Error("Error reading file: %s", err.Error())
+			}
+			if !isDir(&path) {
+				wg.Add(1)
+				go nodeGenerator(path)
+			}
+			return nil
+		}) != nil {
+			logging.Error("Error walking files in %s dir", dir)
+		}
 	}
 
-	err = filepath.Walk(pagesDir, pagesTraverser)
-	if err != nil {
-		logging.Error("Error walking files in pages dir: %s", err.Error())
-	}
+	wg.Wait()
+	return nodes
 }
 
 func main() {
@@ -143,7 +129,11 @@ func main() {
 	// read globals file and generate globals
 	_ = readGlobals(inputDir)
 	// read and convert files
-	generateFileNodes(inputDir)
+	nodes := generateFileNodes(inputDir)
+	for _, node := range nodes {
+		fmt.Println(string(node.Blocks[0].(core.RawBlock).Data))
+	}
+	fmt.Println(len(nodes))
 	// parse files
 	// compress files
 	// files to public
