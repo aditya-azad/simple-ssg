@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
@@ -40,8 +39,8 @@ func validateInputDirectoryStructure(path *string) {
 	if err != nil {
 		logging.Error("Unable to get absolute path of input directory: %s", err.Error())
 	}
-	validDirectories := set.NewSet("public", "templates", "pages")
-	validFiles := set.NewSet("globals.yml")
+	validDirectories := set.New("public", "templates", "pages")
+	validFiles := set.New("globals.yml")
 	if err != nil {
 		logging.Error("Unable to read the input directory: %s", err.Error())
 	}
@@ -79,20 +78,27 @@ func convertMarkdownToHTML(data []byte) []byte {
 }
 
 func convertIpynbToHTML(data []byte) []byte {
+	// TODO: implement this
 	return data
 }
 
-func buildBlockChainFromRawData(data []byte, fileExtension string) {
+func toHTML(data []byte, fileExtension string) []byte {
 	htmlData := data
 	switch fileExtension {
 	case ".md":
 		htmlData = convertMarkdownToHTML(data)
-	case ".html":
 	case ".ipynb":
 		htmlData = convertIpynbToHTML(data)
+	case ".html":
+		// do nothing
 	default:
 		logging.Error("Unknown file type %s received", fileExtension)
 	}
+	return htmlData
+}
+
+func HTMLToBlocks(data *[]byte) []core.Block {
+	// Convert HTML data to chain of blocks of linked list
 }
 
 func generateFileNodes(inputDir *string) map[string]core.FileNode {
@@ -110,14 +116,15 @@ func generateFileNodes(inputDir *string) map[string]core.FileNode {
 		if err != nil {
 			logging.Error("Error reading file: %s", err.Error())
 		}
-		buildBlockChainFromRawData(dat, filepath.Ext(rel))
+		dat = toHTML(dat, filepath.Ext(rel))
+		blocks = HTMLToBlocks(&dat)
 		mut.Lock()
 		nodes[rel] = core.FileNode{
 			FilePath:      rel,
 			Template:      "",
 			TemplateProps: map[string]string{},
-			Expands:       *set.NewSet(""),
-			Blocks:        []core.Block{core.RawBlock{Data: dat}},
+			Expands:       *set.New(""),
+			Blocks:        blocks,
 		}
 		mut.Unlock()
 	}

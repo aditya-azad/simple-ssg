@@ -4,7 +4,7 @@ type Set[K comparable] struct {
 	mp map[K]bool
 }
 
-func NewSet[K comparable](vals ...K) *Set[K] {
+func New[K comparable](vals ...K) *Set[K] {
 	st := &Set[K]{map[K]bool{}}
 	for _, val := range vals {
 		st.mp[val] = true
