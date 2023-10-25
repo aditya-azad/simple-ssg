@@ -97,13 +97,14 @@ func toHTML(data []byte, fileExtension string) []byte {
 	return htmlData
 }
 
-func HTMLToBlocks(data *[]byte) []core.Block {
-	// Convert HTML data to chain of blocks of linked list
+func HTMLToBlocks(data *[]byte) core.BlockChain {
+	// Convert HTML data to chain of blocks
 }
 
 func generateFileNodes(inputDir *string) map[string]core.FileNode {
 	nodes := map[string]core.FileNode{}
 	var wg sync.WaitGroup
+	// TODO: change with something more efficent than spin lock
 	var mut sync.Mutex
 
 	nodeGenerator := func(path string) {
@@ -117,7 +118,7 @@ func generateFileNodes(inputDir *string) map[string]core.FileNode {
 			logging.Error("Error reading file: %s", err.Error())
 		}
 		dat = toHTML(dat, filepath.Ext(rel))
-		blocks = HTMLToBlocks(&dat)
+		blocks := HTMLToBlocks(&dat)
 		mut.Lock()
 		nodes[rel] = core.FileNode{
 			FilePath:      rel,

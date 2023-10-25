@@ -9,5 +9,5 @@ type FileNode struct {
 	Template      string
 	TemplateProps map[string]string
 	Expands       set.Set[string]
-	Blocks        []Block
+	Blocks        BlockChain
 }
