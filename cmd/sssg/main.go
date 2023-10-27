@@ -97,14 +97,56 @@ func toHTML(data []byte, fileExtension string) []byte {
 	return htmlData
 }
 
-func HTMLToBlocks(data *[]byte) core.BlockChain {
-	// Convert HTML data to chain of blocks
+func HTMLToBlocks(data *[]byte) *core.BlockChain {
+	// convert HTML data to chain of blocks
+	bc := core.NewBlockChain()
+	isOpen := false
+	var start uint64 = 0
+	var dataSize uint64 = uint64(len(*data))
+
+	for i := uint64(0); i < dataSize; i += 1 {
+		// opening braces
+		if i+1 < dataSize && (*data)[i] == byte('{') && (*data)[i+1] == byte('%') {
+			bc.Append(&core.Block{
+				Type:     core.BLOCK_HTML,
+				Next:     nil,
+				Prev:     nil,
+				StartIdx: start,
+				EndIdx:   i,
+			})
+			start = i + 2
+			if isOpen {
+				logging.Error("Invalid syntax, you cannot nest special blocks")
+			}
+			isOpen = true
+		}
+		// closing braces
+		if i+1 < dataSize && (*data)[i] == byte('%') && (*data)[i+1] == byte('}') {
+			blockType, err = core.ParseBlockType(data, start, i+1)
+			if err != nil {
+				logging.Error("Invalid block type found: ", err.Error())
+			}
+			bc.Append(&core.Block{
+				Type:     blockType,
+				Next:     nil,
+				Prev:     nil,
+				StartIdx: start,
+				EndIdx:   i,
+			})
+			start = i + 2
+			if !isOpen {
+				logging.Error("Invalid syntax, you cannot close a unopened block")
+			}
+			isOpen = false
+		}
+	}
+	return bc
 }
 
 func generateFileNodes(inputDir *string) map[string]core.FileNode {
+	// generates a map of relative path -> FileNode for all the files
 	nodes := map[string]core.FileNode{}
 	var wg sync.WaitGroup
-	// TODO: change with something more efficent than spin lock
 	var mut sync.Mutex
 
 	nodeGenerator := func(path string) {
@@ -124,7 +166,7 @@ func generateFileNodes(inputDir *string) map[string]core.FileNode {
 			FilePath:      rel,
 			Template:      "",
 			TemplateProps: map[string]string{},
-			Expands:       *set.New(""),
+			Expands:       []string{},
 			Blocks:        blocks,
 		}
 		mut.Unlock()

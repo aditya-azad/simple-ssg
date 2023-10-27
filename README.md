@@ -82,7 +82,7 @@ The language use tags similar to Jinja's `{% ... %}` syntax. Templates themselve
 
 The `template_name` is used as template for the page. Basically, the contents of the page is replaced with contents of the template. The replaced content is placed where `content` in the template used to be. Additionally props can be passed to the templates. They need to be variables therefore you need to first define them using `def`. To use those props in the template file, you have to use `prop` tag.
 
-### `{% expand <template_name> %}`
+### `{% expand <template_name> <props> %}`
 
 This tag is replaced with the contents of the template.
 
@@ -94,11 +94,15 @@ This is where the contents of the page are pasted when using `template`.
 
 You can use the defined variables passed as props or read from global config file
 
-### `{% for <variable_name> in <directory> <content> %}`
+### `{% for <variable_name> in <directory> %}`
 
 You can also loop over files in a directory. You can have content on a separate line for readability. `<variable_name>` inside the loop is accessed using `{$<variable_name>$}`. You can access the `def`s inside those pages in the directory using the `.` operator. Optionally you can choose to sort using `_sort(<directory>,<sort_key>)` where `<sort_key>` is the `def` inside the file to sort by. Make sure there are no spaces if you are using sort. You can also reverse sort using `_rsort`. The `<variable_name>` has a special `_slug` variable that refers to the relative filepath of the page. You can use this to create anchor tags. Nesting is not allowed. See the example for clear usage.
 
-### `{% out_only %}`
+### `{% endfor %}`
+
+Marks the end of for loop
+
+### `{% outonly %}`
 
 Only spported in `.ipynb` files. If this string is present anywhere in a code cell, the code will not be displayed.
 
