@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
@@ -98,8 +97,8 @@ func toHTML(data []byte, fileExtension string) []byte {
 	return htmlData
 }
 
+// Convert HTML data to chain of blocks
 func HTMLToBlocks(data *[]byte) *core.BlockChain {
-	// convert HTML data to chain of blocks
 	bc := core.NewBlockChain()
 	isOpen := false
 	var start uint64 = 0
@@ -111,31 +110,22 @@ func HTMLToBlocks(data *[]byte) *core.BlockChain {
 				logging.Error("Invalid syntax, you cannot nest special blocks")
 			}
 			bc.Append(&core.Block{
-				Type:     core.BLOCK_HTML,
-				Next:     nil,
-				Prev:     nil,
-				StartIdx: start,
-				EndIdx:   i,
+				Type: core.BLOCK_HTML,
+				Args: []string{string((*data)[start:i])},
 			})
 			start = i + 2
 			isOpen = true
 		}
 		// closing braces
 		if i+1 < dataSize && (*data)[i] == byte('%') && (*data)[i+1] == byte('}') {
-			blockType, err := core.ParseBlockType(data, start, i+1)
-			if err != nil {
-				logging.Error(err.Error())
-			}
 			if !isOpen {
 				logging.Error("Invalid syntax, you cannot close a unopened block")
 			}
-			bc.Append(&core.Block{
-				Type:     blockType,
-				Next:     nil,
-				Prev:     nil,
-				StartIdx: start,
-				EndIdx:   i,
-			})
+			block, err := core.ParseSpecialBlock(data, start, i)
+			if err != nil {
+				logging.Error(err.Error())
+			}
+			bc.Append(block)
 			start = i + 2
 			isOpen = false
 		}
@@ -143,8 +133,8 @@ func HTMLToBlocks(data *[]byte) *core.BlockChain {
 	return bc
 }
 
+// Generates a map of relative path -> FileNode for all the files
 func generateFileNodes(inputDir *string) map[string]core.FileNode {
-	// generates a map of relative path -> FileNode for all the files
 	nodes := map[string]core.FileNode{}
 	var wg sync.WaitGroup
 	var mut sync.Mutex
@@ -155,12 +145,12 @@ func generateFileNodes(inputDir *string) map[string]core.FileNode {
 		if err != nil {
 			logging.Error("Error generating relative path: %s", err.Error())
 		}
-		dat, err := os.ReadFile(path)
+		data, err := os.ReadFile(path)
 		if err != nil {
 			logging.Error("Error reading file: %s", err.Error())
 		}
-		dat = toHTML(dat, filepath.Ext(rel))
-		blocks := HTMLToBlocks(&dat)
+		data = toHTML(data, filepath.Ext(rel))
+		blocks := HTMLToBlocks(&data)
 		mut.Lock()
 		nodes[rel] = core.FileNode{
 			FilePath:  rel,
@@ -204,9 +194,8 @@ func main() {
 	// read globals file and generate globals
 	_ = readGlobals(inputDir)
 	// read and convert files
-	nodes := generateFileNodes(inputDir)
+	_ = generateFileNodes(inputDir)
 	// parse files
-	fmt.Println(nodes)
 	// compress files
 	// files to public
 	// compress and copy public files

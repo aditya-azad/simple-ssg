@@ -5,7 +5,7 @@
 <ul class="post-list">
     {% for page in _rsort(posts,date) %}
     <li>
-      <div><a href="{$page._slug$}">{$page.title$}</a></div>
+      <div><a href="{% use page._slug %}">{% use page.title %}</a></div>
       <div>{% use page.date %}</div>
     </li> 
     {% endfor %}

@@ -1,8 +1,4 @@
-{% def title Markdown Syntax Guide %}
-{% def date 2020-01-03 %}
-{% def tags markdown, syntax %}
-
-{% template blog_post.html title date tags %}
+{% template blog_post.html title='Markdown Syntax Guide' date='2020-01-03' tags='markdown syntax' %}
 
 For a quick cheatsheet, check out <https://simplemde.com/markdown-guide>.
 

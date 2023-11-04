@@ -3,16 +3,14 @@ package core
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
-
-	"github.com/aditya-azad/simple-ssg/pkg/strutils"
 )
 
 const (
 	BLOCK_HTML = iota
 	BLOCK_CONTENT
 	BLOCK_USE
-	BLOCK_DEF
 	BLOCK_FOR
 	BLOCK_END_FOR
 	BLOCK_OUT_ONLY
@@ -22,19 +20,18 @@ const (
 )
 
 type Block struct {
-	Type     int
-	Next     *Block
-	Prev     *Block
-	StartIdx uint64
-	EndIdx   uint64
+	Type int
+	Args []string
+	Next *Block
+	Prev *Block
 }
 
 type BlockChain struct {
 	sentinel *Block
 }
 
+// Create and return a new block chain
 func NewBlockChain() *BlockChain {
-	// create and return a new block chain
 	sentinel := Block{}
 	sentinel.Type = BLOCK_SENTINEL
 	sentinel.Next = &sentinel
@@ -42,43 +39,8 @@ func NewBlockChain() *BlockChain {
 	return &BlockChain{&sentinel}
 }
 
-func ParseBlockType(data *[]byte, start, end uint64) (int, error) {
-	// parse the type of block
-	startIdx, err := strutils.IndexOfFirstNonWhitespace(data, start)
-	if err != nil {
-		return -1, err
-	}
-	endIdx, err := strutils.IndexOfFirstWhitespace(data, startIdx)
-	if err != nil {
-		return -1, err
-	}
-	if endIdx > end {
-		return -1, errors.New("Invalid syntax found while parsing block! Are you using the correct syntax?")
-	}
-	strCode := string((*data)[startIdx:endIdx])
-	blockTypeStr := strings.ToLower(strings.Split(strings.Trim(strCode, " "), " ")[0])
-	if blockTypeStr == "template" {
-		return BLOCK_TEMPLATE, nil
-	} else if blockTypeStr == "expand" {
-		return BLOCK_EXPAND, nil
-	} else if blockTypeStr == "content" {
-		return BLOCK_CONTENT, nil
-	} else if blockTypeStr == "use" {
-		return BLOCK_USE, nil
-	} else if blockTypeStr == "def" {
-		return BLOCK_DEF, nil
-	} else if blockTypeStr == "for" {
-		return BLOCK_FOR, nil
-	} else if blockTypeStr == "endfor" {
-		return BLOCK_END_FOR, nil
-	} else if blockTypeStr == "outonly" {
-		return BLOCK_OUT_ONLY, nil
-	}
-	return -1, errors.New(fmt.Sprintf("Unrecognized block type '%s'", blockTypeStr))
-}
-
+// Insert new block at the end of the list
 func (bc *BlockChain) Append(b *Block) {
-	// insert new block at the end of the list
 	last := bc.sentinel.Prev
 	b.Next = bc.sentinel
 	b.Prev = last
@@ -86,8 +48,8 @@ func (bc *BlockChain) Append(b *Block) {
 	bc.sentinel.Prev = b
 }
 
+// Insert new block at the head of the list
 func (bc *BlockChain) AppendLeft(b *Block) {
-	// insert new block at the head of the list
 	next := bc.sentinel.Next
 	b.Next = next
 	b.Prev = bc.sentinel
@@ -106,3 +68,44 @@ func (bc *BlockChain) AppendLeft(b *Block) {
 //func (bc *BlockChain) Eject() (*Block, *Block) {
 // remove sentinel and return the head and tail of the list, return error if list is empty
 //}
+
+// Parses data between start and end into a special block (non HTML block)
+func ParseSpecialBlock(data *[]byte, start, end uint64) (*Block, error) {
+	argsString := string((*data)[start:end])
+	argsString = strings.ReplaceAll(argsString, "&rsquo;", "'")
+	argsString = strings.ReplaceAll(argsString, "&lsquo;", "'")
+	re := regexp.MustCompile(`[^\s'\\]+|\\[\\']*|'([^']*?)'`) // keeps quoted string together while splitting on spaces
+	tokens := re.FindAllString(argsString, -1)
+	// parse the type of block
+	strCode := tokens[0]
+	blockTypeStr := strings.ToLower(strings.Split(strings.Trim(strCode, " "), " ")[0])
+	blockType := -1
+	if blockTypeStr == "template" {
+		blockType = BLOCK_TEMPLATE
+	} else if blockTypeStr == "expand" {
+		blockType = BLOCK_EXPAND
+	} else if blockTypeStr == "content" {
+		blockType = BLOCK_CONTENT
+	} else if blockTypeStr == "use" {
+		blockType = BLOCK_USE
+	} else if blockTypeStr == "for" {
+		blockType = BLOCK_FOR
+	} else if blockTypeStr == "endfor" {
+		blockType = BLOCK_END_FOR
+	} else if blockTypeStr == "outonly" {
+		blockType = BLOCK_OUT_ONLY
+	}
+	if blockType == -1 {
+		return nil, errors.New(fmt.Sprintf("Unrecognized block type '%s'", blockTypeStr))
+	}
+	// parse args
+	for _, x := range tokens {
+		fmt.Printf("`%s`,", x)
+	}
+	fmt.Println()
+	return &Block{
+		Type: blockType,
+		Args: tokens[1:],
+	}, nil
+}
+
