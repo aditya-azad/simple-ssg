@@ -124,7 +124,7 @@ func HTMLToBlocks(data *[]byte) *core.BlockChain {
 		if i+1 < dataSize && (*data)[i] == byte('%') && (*data)[i+1] == byte('}') {
 			blockType, err := core.ParseBlockType(data, start, i+1)
 			if err != nil {
-				logging.Error("Invalid block type found: ", err.Error())
+				logging.Error(err.Error())
 			}
 			if !isOpen {
 				logging.Error("Invalid syntax, you cannot close a unopened block")

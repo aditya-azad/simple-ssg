@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/aditya-azad/simple-ssg/pkg/strutils"
 )
 
 const (
@@ -42,10 +44,18 @@ func NewBlockChain() *BlockChain {
 
 func ParseBlockType(data *[]byte, start, end uint64) (int, error) {
 	// parse the type of block
-	// TODO: don't need to make a copy
-	code := make([]byte, end-start+1)
-	copy(code, (*data)[start:end])
-	strCode := string(code)
+	startIdx, err := strutils.IndexOfFirstNonWhitespace(data, start)
+	if err != nil {
+		return -1, err
+	}
+	endIdx, err := strutils.IndexOfFirstWhitespace(data, startIdx)
+	if err != nil {
+		return -1, err
+	}
+	if endIdx > end {
+		return -1, errors.New("Invalid syntax found while parsing block! Are you using the correct syntax?")
+	}
+	strCode := string((*data)[startIdx:endIdx])
 	blockTypeStr := strings.ToLower(strings.Split(strings.Trim(strCode, " "), " ")[0])
 	if blockTypeStr == "template" {
 		return BLOCK_TEMPLATE, nil
@@ -86,13 +96,13 @@ func (bc *BlockChain) AppendLeft(b *Block) {
 }
 
 //func (bc *BlockChain) PopLeft() *Block {
-	// remove a block from the start of list, return error if not present
+// remove a block from the start of list, return error if not present
 //}
 
 //func (bc *BlockChain) Pop() *Block {
-	// remove a block from the end of list, return error if not present
+// remove a block from the end of list, return error if not present
 //}
 
 //func (bc *BlockChain) Eject() (*Block, *Block) {
-	// remove sentinel and return the head and tail of the list, return error if list is empty
+// remove sentinel and return the head and tail of the list, return error if list is empty
 //}
