@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
@@ -103,10 +104,12 @@ func HTMLToBlocks(data *[]byte) *core.BlockChain {
 	isOpen := false
 	var start uint64 = 0
 	var dataSize uint64 = uint64(len(*data))
-
 	for i := uint64(0); i < dataSize; i += 1 {
 		// opening braces
 		if i+1 < dataSize && (*data)[i] == byte('{') && (*data)[i+1] == byte('%') {
+			if isOpen {
+				logging.Error("Invalid syntax, you cannot nest special blocks")
+			}
 			bc.Append(&core.Block{
 				Type:     core.BLOCK_HTML,
 				Next:     nil,
@@ -115,16 +118,16 @@ func HTMLToBlocks(data *[]byte) *core.BlockChain {
 				EndIdx:   i,
 			})
 			start = i + 2
-			if isOpen {
-				logging.Error("Invalid syntax, you cannot nest special blocks")
-			}
 			isOpen = true
 		}
 		// closing braces
 		if i+1 < dataSize && (*data)[i] == byte('%') && (*data)[i+1] == byte('}') {
-			blockType, err = core.ParseBlockType(data, start, i+1)
+			blockType, err := core.ParseBlockType(data, start, i+1)
 			if err != nil {
 				logging.Error("Invalid block type found: ", err.Error())
+			}
+			if !isOpen {
+				logging.Error("Invalid syntax, you cannot close a unopened block")
 			}
 			bc.Append(&core.Block{
 				Type:     blockType,
@@ -134,9 +137,6 @@ func HTMLToBlocks(data *[]byte) *core.BlockChain {
 				EndIdx:   i,
 			})
 			start = i + 2
-			if !isOpen {
-				logging.Error("Invalid syntax, you cannot close a unopened block")
-			}
 			isOpen = false
 		}
 	}
@@ -163,11 +163,10 @@ func generateFileNodes(inputDir *string) map[string]core.FileNode {
 		blocks := HTMLToBlocks(&dat)
 		mut.Lock()
 		nodes[rel] = core.FileNode{
-			FilePath:      rel,
-			Template:      "",
-			TemplateProps: map[string]string{},
-			Expands:       []string{},
-			Blocks:        blocks,
+			FilePath:  rel,
+			Deps:      []string{},
+			DepsProps: []map[string]string{},
+			Blocks:    blocks,
 		}
 		mut.Unlock()
 	}
@@ -205,8 +204,9 @@ func main() {
 	// read globals file and generate globals
 	_ = readGlobals(inputDir)
 	// read and convert files
-	_ = generateFileNodes(inputDir)
+	nodes := generateFileNodes(inputDir)
 	// parse files
+	fmt.Println(nodes)
 	// compress files
 	// files to public
 	// compress and copy public files

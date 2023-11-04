@@ -1,7 +1,7 @@
 {% template main_layout.html %}
 
-<h1>{% prop title %}</h1>
-<p class="metatext">Publish date: {% prop date %}<br>Tags: {% prop tags %}</p>
+<h1>{% use title %}</h1>
+<p class="metatext">Publish date: {% use date %}<br>Tags: {% use tags %}</p>
 
 {% content %}
 

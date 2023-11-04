@@ -10,6 +10,7 @@ const (
 	BLOCK_HTML = iota
 	BLOCK_CONTENT
 	BLOCK_USE
+	BLOCK_DEF
 	BLOCK_FOR
 	BLOCK_END_FOR
 	BLOCK_OUT_ONLY
@@ -41,6 +42,7 @@ func NewBlockChain() *BlockChain {
 
 func ParseBlockType(data *[]byte, start, end uint64) (int, error) {
 	// parse the type of block
+	// TODO: don't need to make a copy
 	code := make([]byte, end-start+1)
 	copy(code, (*data)[start:end])
 	strCode := string(code)
@@ -53,6 +55,8 @@ func ParseBlockType(data *[]byte, start, end uint64) (int, error) {
 		return BLOCK_CONTENT, nil
 	} else if blockTypeStr == "use" {
 		return BLOCK_USE, nil
+	} else if blockTypeStr == "def" {
+		return BLOCK_DEF, nil
 	} else if blockTypeStr == "for" {
 		return BLOCK_FOR, nil
 	} else if blockTypeStr == "endfor" {
@@ -81,14 +85,14 @@ func (bc *BlockChain) AppendLeft(b *Block) {
 	bc.sentinel.Next = b
 }
 
-func (bc *BlockChain) PopLeft() *Block {
+//func (bc *BlockChain) PopLeft() *Block {
 	// remove a block from the start of list, return error if not present
-}
+//}
 
-func (bc *BlockChain) Pop() *Block {
+//func (bc *BlockChain) Pop() *Block {
 	// remove a block from the end of list, return error if not present
-}
+//}
 
-func (bc *BlockChain) Eject() (*Block, *Block) {
+//func (bc *BlockChain) Eject() (*Block, *Block) {
 	// remove sentinel and return the head and tail of the list, return error if list is empty
-}
+//}
