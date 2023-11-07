@@ -70,7 +70,7 @@ func (bc *BlockChain) AppendLeft(b *Block) {
 //}
 
 // Parses data between start and end into a special block (non HTML block)
-func ParseSpecialBlock(data *[]byte, start, end uint64) (*Block, error) {
+func parseSpecialBlock(data *[]byte, start, end uint64) (*Block, error) {
 	argsString := string((*data)[start:end])
 	argsString = strings.ReplaceAll(argsString, "&rsquo;", "'")
 	argsString = strings.ReplaceAll(argsString, "&lsquo;", "'")
@@ -80,22 +80,22 @@ func ParseSpecialBlock(data *[]byte, start, end uint64) (*Block, error) {
 	strCode := tokens[0]
 	blockTypeStr := strings.ToLower(strings.Split(strings.Trim(strCode, " "), " ")[0])
 	blockType := -1
-	if blockTypeStr == "template" {
+	switch blockTypeStr {
+	case "template":
 		blockType = BLOCK_TEMPLATE
-	} else if blockTypeStr == "expand" {
+	case "expand":
 		blockType = BLOCK_EXPAND
-	} else if blockTypeStr == "content" {
+	case "content":
 		blockType = BLOCK_CONTENT
-	} else if blockTypeStr == "use" {
+	case "use":
 		blockType = BLOCK_USE
-	} else if blockTypeStr == "for" {
+	case "for":
 		blockType = BLOCK_FOR
-	} else if blockTypeStr == "endfor" {
+	case "endfor":
 		blockType = BLOCK_END_FOR
-	} else if blockTypeStr == "outonly" {
+	case "outonly":
 		blockType = BLOCK_OUT_ONLY
-	}
-	if blockType == -1 {
+	default:
 		return nil, errors.New(fmt.Sprintf("Unrecognized block type '%s'", blockTypeStr))
 	}
 	// parse args
@@ -109,3 +109,38 @@ func ParseSpecialBlock(data *[]byte, start, end uint64) (*Block, error) {
 	}, nil
 }
 
+// Convert HTML data to chain of blocks
+func HTMLToBlocks(data *[]byte) (*BlockChain, error) {
+	bc := NewBlockChain()
+	isOpen := false
+	var start uint64 = 0
+	var dataSize uint64 = uint64(len(*data))
+	for i := uint64(0); i < dataSize; i += 1 {
+		// opening braces
+		if i+1 < dataSize && (*data)[i] == byte('{') && (*data)[i+1] == byte('%') {
+			if isOpen {
+				return nil, errors.New("Invalid syntax, you cannot nest special blocks")
+			}
+			bc.Append(&Block{
+				Type: BLOCK_HTML,
+				Args: []string{string((*data)[start:i])},
+			})
+			start = i + 2
+			isOpen = true
+		}
+		// closing braces
+		if i+1 < dataSize && (*data)[i] == byte('%') && (*data)[i+1] == byte('}') {
+			if !isOpen {
+				return nil, errors.New("Invalid syntax, you cannot close a unopened block")
+			}
+			block, err := parseSpecialBlock(data, start, i)
+			if err != nil {
+				return nil, err
+			}
+			bc.Append(block)
+			start = i + 2
+			isOpen = false
+		}
+	}
+	return bc, nil
+}
