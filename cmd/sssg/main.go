@@ -9,9 +9,6 @@ import (
 	"github.com/aditya-azad/simple-ssg/pkg/logging"
 	"github.com/aditya-azad/simple-ssg/pkg/set"
 	"github.com/aditya-azad/simple-ssg/pkg/fs"
-	"github.com/gomarkdown/markdown"
-	"github.com/gomarkdown/markdown/html"
-	"github.com/gomarkdown/markdown/parser"
 	"gopkg.in/yaml.v2"
 )
 
