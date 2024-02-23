@@ -8,20 +8,23 @@ import (
 )
 
 const (
-	BLOCK_HTML = iota
+	BLOCK_SENTINEL = iota
+
+	BLOCK_HTML
+
+	BLOCK_TEMPLATE
+	BLOCK_EXPAND
 	BLOCK_CONTENT
 	BLOCK_USE
 	BLOCK_FOR
 	BLOCK_END_FOR
+	BLOCK_VAR
 	BLOCK_OUT_ONLY
-	BLOCK_EXPAND
-	BLOCK_TEMPLATE
-	BLOCK_SENTINEL
 )
 
 type Block struct {
 	Type int
-	Args []string
+	Data []string
 	Next *Block
 	Prev *Block
 }
@@ -57,56 +60,102 @@ func (bc *BlockChain) AppendLeft(b *Block) {
 	bc.sentinel.Next = b
 }
 
-//func (bc *BlockChain) PopLeft() *Block {
-// remove a block from the start of list, return error if not present
-//}
-
-//func (bc *BlockChain) Pop() *Block {
-// remove a block from the end of list, return error if not present
-//}
-
-//func (bc *BlockChain) Eject() (*Block, *Block) {
-// remove sentinel and return the head and tail of the list, return error if list is empty
-//}
+func parseAssignmentExpr(expr string) (string, string, error) {
+	return "", "", errors.New("Not implemented")
+}
 
 // Parses data between start and end into a special block (non HTML block)
 func parseSpecialBlock(data *[]byte, start, end uint64) (*Block, error) {
+	// convert to string
 	argsString := string((*data)[start:end])
 	argsString = strings.ReplaceAll(argsString, "&rsquo;", "'")
 	argsString = strings.ReplaceAll(argsString, "&lsquo;", "'")
 	re := regexp.MustCompile(`[^\s'\\]+|\\[\\']*|'([^']*?)'`) // keeps quoted string together while splitting on spaces
+	// parse out tokens
 	tokens := re.FindAllString(argsString, -1)
-	// parse the type of block
+	if len(tokens) == 0 {
+		return nil, errors.New(fmt.Sprintf("Invalid syntax: '%s'", argsString))
+	}
+	// first token is the name of the block
 	strCode := tokens[0]
 	blockTypeStr := strings.ToLower(strings.Split(strings.Trim(strCode, " "), " ")[0])
-	blockType := -1
+	// parse the rest of it
 	switch blockTypeStr {
 	case "template":
-		blockType = BLOCK_TEMPLATE
+		var data []string
+		// check no template name given
+		if len(tokens) < 2 {
+			return nil, errors.New(fmt.Sprintf("Invalid syntax for `template` tag, no template name given: '%s'", argsString))
+		} else {
+			data = append(data, tokens[1])
+		}
+		// check not correct form of expression
+		if len(tokens) >= 3 {
+			for _, assignExpr := range tokens[2:] {
+				key, val, err := parseAssignmentExpr(assignExpr)
+				if err != nil {
+					return nil, errors.New(fmt.Sprintf("Invalid syntax for `template` tag, invalid assignment expression: '%s'", argsString))
+				}
+				data = append(data, key)
+				data = append(data, val)
+			}
+		}
+		return &Block{
+			Type: BLOCK_TEMPLATE,
+			Data: data,
+		}, nil
 	case "expand":
-		blockType = BLOCK_EXPAND
+		var data []string
+		// check no template name given
+		if len(tokens) < 2 {
+			return nil, errors.New(fmt.Sprintf("Invalid syntax for `expand` tag, no template name given: '%s'", argsString))
+		} else {
+			data = append(data, tokens[1])
+		}
+		// check not correct form of expression
+		if len(tokens) >= 3 {
+			for _, assignExpr := range tokens[2:] {
+				key, val, err := parseAssignmentExpr(assignExpr)
+				if err != nil {
+					return nil, errors.New(fmt.Sprintf("Invalid syntax for `expand` tag, invalid assignment expression: '%s'", argsString))
+				}
+				data = append(data, key)
+				data = append(data, val)
+			}
+		}
+		return &Block{
+			Type: BLOCK_EXPAND,
+			Data: data,
+		}, nil
 	case "content":
-		blockType = BLOCK_CONTENT
+		return &Block{
+			Type: BLOCK_CONTENT,
+		}, nil
 	case "use":
-		blockType = BLOCK_USE
+		var data []string
+		// check invalid length of variables
+		if len(tokens) != 2 {
+			return nil, errors.New(fmt.Sprintf("Invalid syntax for `use` tag, no variable name given: '%s'", argsString))
+		} else {
+			data = append(data, tokens[1])
+		}
+		return &Block{
+			Type: BLOCK_USE,
+			Data: data,
+		}, nil
 	case "for":
+		var data []string
+        // TODO
 		blockType = BLOCK_FOR
 	case "endfor":
 		blockType = BLOCK_END_FOR
+	case "var":
+		blockType = BLOCK_VAR
 	case "outonly":
 		blockType = BLOCK_OUT_ONLY
 	default:
 		return nil, errors.New(fmt.Sprintf("Unrecognized block type '%s'", blockTypeStr))
 	}
-	// parse args
-	for _, x := range tokens {
-		fmt.Printf("`%s`,", x)
-	}
-	fmt.Println()
-	return &Block{
-		Type: blockType,
-		Args: tokens[1:],
-	}, nil
 }
 
 // Convert HTML data to chain of blocks
@@ -123,7 +172,7 @@ func HTMLToBlocks(data *[]byte) (*BlockChain, error) {
 			}
 			bc.Append(&Block{
 				Type: BLOCK_HTML,
-				Args: []string{string((*data)[start:i])},
+				Data: []string{string((*data)[start:i])},
 			})
 			start = i + 2
 			isOpen = true

@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 
 	"github.com/aditya-azad/simple-ssg/internal/core"
+	"github.com/aditya-azad/simple-ssg/pkg/fs"
 	"github.com/aditya-azad/simple-ssg/pkg/logging"
 	"github.com/aditya-azad/simple-ssg/pkg/set"
-	"github.com/aditya-azad/simple-ssg/pkg/fs"
 	"gopkg.in/yaml.v2"
 )
 
@@ -70,7 +70,7 @@ func main() {
 	// read globals file and generate globals
 	_ = readGlobals(inputDir)
 	// read and convert files
-    _, _ = core.GenerateFileNodes(inputDir)
+	_, _ = core.GenerateFileNodes(inputDir)
 	// parse files
 	// compress files
 	// files to public

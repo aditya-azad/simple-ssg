@@ -22,7 +22,7 @@ type FileNode struct {
 func GenerateFileNodes(inputDir *string) (map[string]FileNode, error) {
 	nodes := map[string]FileNode{}
 	var wg sync.WaitGroup
-	// TODO: find something else to use, maybe make ndes a struct and have a shared mutex
+	// TODO: find something else to use, maybe make nodes a struct and have a shared mutex
 	var mut sync.Mutex
 
 	nodeGenerator := func(path string) error {
