@@ -13,6 +13,7 @@ import (
 type FileNode struct {
 	FilePath  string
 	Deps      []string
+	Vars      []string
 	DepsProps []map[string]string
 	Blocks    *BlockChain
 }
