@@ -91,6 +91,7 @@ func parseSpecialBlock(data *[]byte, start, end uint64) (*Block, error) {
 	blockTypeStr := strings.ToLower(strings.Split(strings.Trim(strCode, " "), " ")[0])
 	// parse the rest of it
 	switch blockTypeStr {
+
 	case "template":
 		var data []string
 		// check no template name given
@@ -113,6 +114,7 @@ func parseSpecialBlock(data *[]byte, start, end uint64) (*Block, error) {
 			Type: BLOCK_TEMPLATE,
 			Data: data,
 		}, nil
+
 	case "expand":
 		var data []string
 		// check no template name given
@@ -135,10 +137,12 @@ func parseSpecialBlock(data *[]byte, start, end uint64) (*Block, error) {
 			Type: BLOCK_EXPAND,
 			Data: data,
 		}, nil
+
 	case "content":
 		return &Block{
 			Type: BLOCK_CONTENT,
 		}, nil
+
 	case "use":
 		var data []string
 		// check invalid length of variables
@@ -150,6 +154,7 @@ func parseSpecialBlock(data *[]byte, start, end uint64) (*Block, error) {
 			Type: BLOCK_USE,
 			Data: data,
 		}, nil
+
 	case "for":
 		var data []string
 		// check invalid length
@@ -166,16 +171,19 @@ func parseSpecialBlock(data *[]byte, start, end uint64) (*Block, error) {
 			Type: BLOCK_FOR,
 			Data: data,
 		}, nil
+
 	case "endfor":
 		return &Block{
 			Type: BLOCK_END_FOR,
 		}, nil
+
 	case "var":
 		var data []string
 		// check invalid length
 		if len(tokens) != 2 {
 			return nil, errors.New(fmt.Sprintf("Invalid syntax for `var` tag: %s", argsString))
 		}
+		// parse expression
 		key, val, err := parseAssignmentExpr(tokens[1])
 		if err != nil {
 			return nil, err
@@ -186,10 +194,12 @@ func parseSpecialBlock(data *[]byte, start, end uint64) (*Block, error) {
 			Type: BLOCK_VAR,
 			Data: data,
 		}, nil
+
 	case "outonly":
 		return &Block{
 			Type: BLOCK_OUT_ONLY,
 		}, nil
+
 	default:
 		return nil, errors.New(fmt.Sprintf("Unrecognized block type '%s'", blockTypeStr))
 	}
