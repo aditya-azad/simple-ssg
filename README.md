@@ -5,9 +5,8 @@
 - arch
     - public -> compress -> copy
     - templates -> linked list of types + dependencies
-    - pages -> linked list of types + dependencies + defines
+    - pages -> linked list of types + dependencies + defines -> compress -> copy
     - check for errors using dag
-    - generate
 
 - global_vars: stores the global variables visible to all files
     - _pages: slugs of files in pages dir (does not recurse)

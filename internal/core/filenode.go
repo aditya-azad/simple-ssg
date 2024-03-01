@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sync"
 
 	"github.com/aditya-azad/simple-ssg/pkg/fs"
 	"github.com/aditya-azad/simple-ssg/pkg/logging"
@@ -16,45 +15,13 @@ type FileNode struct {
 	Deps      []string
 	Vars      []string
 	DepsProps []map[string]string
-	Blocks    *BlockChain
+	Blocks    *blockChain
 }
 
 // Generates a map of relative path -> FileNode for all the files.
-// Runs concurrently internally (it is blocking)
+// TODO: Runs concurrently internally (it is blocking)
 func GenerateFileNodes(inputDir *string) (map[string]FileNode, error) {
 	nodes := map[string]FileNode{}
-	var wg sync.WaitGroup
-	// TODO: find something else to use, maybe make nodes a struct and have a shared mutex
-	var mut sync.Mutex
-
-	nodeGenerator := func(path string) error {
-		defer wg.Done()
-		rel, err := filepath.Rel(*inputDir, path)
-		if err != nil {
-			return err
-		}
-		data, err := os.ReadFile(path)
-		if err != nil {
-			return err
-		}
-		data, err = ToHTML(data, filepath.Ext(rel))
-		if err != nil {
-			return err
-		}
-		blocks, err := HTMLToBlocks(&data)
-		if err != nil {
-			return err
-		}
-		mut.Lock()
-		nodes[rel] = FileNode{
-			FilePath:  rel,
-			Deps:      []string{},
-			DepsProps: []map[string]string{},
-			Blocks:    blocks,
-		}
-		mut.Unlock()
-		return nil
-	}
 
 	for _, dir := range []string{filepath.Join(*inputDir, "templates/"), filepath.Join(*inputDir, "pages/")} {
 		if filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
@@ -62,8 +29,28 @@ func GenerateFileNodes(inputDir *string) (map[string]FileNode, error) {
 				return err
 			}
 			if !fs.IsDir(&path) {
-				wg.Add(1)
-				go nodeGenerator(path)
+				rel, err := filepath.Rel(*inputDir, path)
+				if err != nil {
+					return err
+				}
+				data, err := os.ReadFile(path)
+				if err != nil {
+					return err
+				}
+				data, err = ToHTML(data, filepath.Ext(rel))
+				if err != nil {
+					return err
+				}
+				blocks, err := HTMLToBlocks(&data)
+				if err != nil {
+					return err
+				}
+				nodes[rel] = FileNode{
+					FilePath:  rel,
+					Deps:      []string{},
+					DepsProps: []map[string]string{},
+					Blocks:    blocks,
+				}
 			}
 			return nil
 		}) != nil {
@@ -72,10 +59,9 @@ func GenerateFileNodes(inputDir *string) (map[string]FileNode, error) {
 	}
 
 	for name, data := range nodes {
-		logging.Info("%s\n%s", name, data.Blocks.ToString(true))
+		logging.Info("%s\n%s", name, data.Blocks.toString(true))
 		logging.Info("")
 	}
 
-	wg.Wait()
 	return nodes, nil
 }
