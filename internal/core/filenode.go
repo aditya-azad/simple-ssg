@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/aditya-azad/simple-ssg/pkg/fs"
+	"github.com/aditya-azad/simple-ssg/pkg/logging"
 )
 
 type FileNode struct {
@@ -68,6 +69,11 @@ func GenerateFileNodes(inputDir *string) (map[string]FileNode, error) {
 		}) != nil {
 			return nil, errors.New(fmt.Sprintf("Error walking files in %s dir", dir))
 		}
+	}
+
+	for name, data := range nodes {
+		logging.Info("%s\n%s", name, data.Blocks.ToString(true))
+		logging.Info("")
 	}
 
 	wg.Wait()

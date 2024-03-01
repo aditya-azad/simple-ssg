@@ -1,6 +1,7 @@
 package core
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"regexp"
@@ -58,6 +59,40 @@ func (bc *BlockChain) AppendLeft(b *Block) {
 	b.Prev = bc.sentinel
 	next.Prev = b
 	bc.sentinel.Next = b
+}
+
+// Convert the chain to a string representation
+func (bc *BlockChain) ToString(displayData bool) string {
+	curr := bc.sentinel
+	typeMap := map[int]string{
+		BLOCK_SENTINEL: "SENTINEL",
+		BLOCK_HTML:     "HTML",
+		BLOCK_TEMPLATE: "TEMPLATE",
+		BLOCK_EXPAND:   "EXPAND",
+		BLOCK_CONTENT:  "CONTENT",
+		BLOCK_USE:      "USE",
+		BLOCK_FOR:      "FOR",
+		BLOCK_END_FOR:  "END FOR",
+		BLOCK_VAR:      "VAR",
+		BLOCK_OUT_ONLY: "OUT ONLY",
+	}
+	var buffer bytes.Buffer
+	for {
+		// print type
+		buffer.WriteString(typeMap[curr.Type])
+		// print data
+		if displayData && curr.Data != nil {
+			buffer.WriteString(" (")
+			buffer.WriteString(strings.ReplaceAll(strings.Join(curr.Data, ", "), "\r\n", ""))
+			buffer.WriteString(")")
+		}
+		buffer.WriteString("\n")
+		curr = curr.Next
+		if curr.Type == BLOCK_SENTINEL {
+			break
+		}
+	}
+	return buffer.String()
 }
 
 // Checks for '=' sign in the string and returns lhs and rhs
@@ -217,10 +252,12 @@ func HTMLToBlocks(data *[]byte) (*BlockChain, error) {
 			if isOpen {
 				return nil, errors.New("Invalid syntax, you cannot nest special blocks")
 			}
-			bc.Append(&Block{
-				Type: BLOCK_HTML,
-				Data: []string{string((*data)[start:i])},
-			})
+			if start != i {
+				bc.Append(&Block{
+					Type: BLOCK_HTML,
+					Data: []string{string((*data)[start:i])},
+				})
+			}
 			start = i + 2
 			isOpen = true
 		}
@@ -237,6 +274,13 @@ func HTMLToBlocks(data *[]byte) (*BlockChain, error) {
 			start = i + 2
 			isOpen = false
 		}
+	}
+	// edge case: final html block
+	if start != dataSize {
+		bc.Append(&Block{
+			Type: BLOCK_HTML,
+			Data: []string{string((*data)[start:dataSize])},
+		})
 	}
 	return bc, nil
 }
