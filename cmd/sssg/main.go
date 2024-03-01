@@ -70,7 +70,10 @@ func main() {
 	// read globals file and generate globals
 	_ = readGlobals(inputDir)
 	// read and convert files
-	_, _ = core.GenerateFileNodes(inputDir)
+	_, err := core.GenerateFileNodes(inputDir)
+	if err != nil {
+		logging.Error("%v", err)
+	}
 	// parse files
 	// compress files
 	// files to public

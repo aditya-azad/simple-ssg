@@ -7,21 +7,139 @@ import (
 	"strings"
 )
 
-// Checks for '=' sign in the string and returns lhs and rhs
 func parseAssignmentExpr(expr string) (string, string, error) {
+	// check if assingment exist
 	index := strings.Index(expr, "=")
 	if index == -1 {
-		return "", "", errors.New(fmt.Sprintf("Invalid syntax for `var` tag, expected variable assignment: %s", expr))
+		return "", "", errors.New("Invalid syntax for `var` tag, expected variable assignment")
 	}
+	// split into lhs and rhs
 	lhs := expr[:index]
 	rhs := expr[index+1:]
+	// check if expression is empty
 	if len(lhs) == 0 || len(rhs) == 0 {
-		return "", "", errors.New(fmt.Sprintf("The LHS and RHS of expression must not be empty: %s", expr))
+		return "", "", errors.New("The LHS and RHS of expression must not be empty")
 	}
 	return lhs, rhs, nil
 }
 
-// Parses data between start and end into a special block (non HTML block)
+func parseTemplateExpr(tokens []string) (*block, error) {
+	var data []string
+	// check no template name given
+	if len(tokens) < 2 {
+		return nil, errors.New("Invalid syntax for `template` tag, no template name given")
+	}
+	data = append(data, tokens[1])
+	// check not correct form of expression
+	if len(tokens) >= 3 {
+		for _, assignExpr := range tokens[2:] {
+			key, val, err := parseAssignmentExpr(assignExpr)
+			if err != nil {
+				return nil, err
+			}
+			data = append(data, key)
+			data = append(data, val)
+		}
+	}
+	return &block{
+		blockType: blockTypeTemplate,
+		data:      data,
+	}, nil
+}
+
+func parseExpandExpr(tokens []string) (*block, error) {
+	var data []string
+	// check no template name given
+	if len(tokens) < 2 {
+		return nil, errors.New("Invalid syntax for `expand` tag, no template name given")
+	}
+	data = append(data, tokens[1])
+	// check not correct form of expression
+	if len(tokens) >= 3 {
+		for _, assignExpr := range tokens[2:] {
+			key, val, err := parseAssignmentExpr(assignExpr)
+			if err != nil {
+				return nil, errors.New("Invalid syntax for `expand` tag, invalid assignment expression")
+			}
+			data = append(data, key)
+			data = append(data, val)
+		}
+	}
+	return &block{
+		blockType: blockTypeExapand,
+		data:      data,
+	}, nil
+}
+
+func parseContentExpr(tokens []string) (*block, error) {
+	return &block{
+		blockType: blockTypeContent,
+	}, nil
+}
+
+func parseUseExpr(tokens []string) (*block, error) {
+	var data []string
+	// check invalid length of variables
+	if len(tokens) != 2 {
+		return nil, errors.New("Invalid syntax for `use` tag, no variable name given")
+	}
+	data = append(data, tokens[1])
+	return &block{
+		blockType: blockTypeUse,
+		data:      data,
+	}, nil
+}
+
+func parseForExpr(tokens []string) (*block, error) {
+	var data []string
+	// check invalid length
+	if len(tokens) != 4 {
+		return nil, errors.New("Invalid syntax for `for` tag")
+	}
+	// check for in
+	if tokens[2] != "in" {
+		return nil, errors.New("Invalid syntax for `for` tag, keyword `in` was expected")
+	}
+	data = append(data, tokens[1])
+	data = append(data, tokens[3])
+	return &block{
+		blockType: blockTypeFor,
+		data:      data,
+	}, nil
+}
+
+func parseEndForExpr(tokens []string) (*block, error) {
+	return &block{
+		blockType: blockTypeEndFor,
+	}, nil
+}
+
+func parseVarExpr(tokens []string) (*block, error) {
+	var data []string
+	// check invalid length
+	if len(tokens) != 2 {
+		return nil, errors.New("Invalid syntax for `var` tag")
+	}
+	// parse expression
+	key, val, err := parseAssignmentExpr(tokens[1])
+	if err != nil {
+		return nil, err
+	}
+	data = append(data, key)
+	data = append(data, val)
+	return &block{
+		blockType: blockTypeVar,
+		data:      data,
+	}, nil
+}
+
+func parseOutOnlyExpr(tokens []string) (*block, error) {
+	return &block{
+		blockType: blockTypeOutOnly,
+	}, nil
+}
+
+// Parses non HTML blocks between start and end
 func parseSpecialBlock(data *[]byte, start, end uint64) (*block, error) {
 	// convert to string
 	argsString := string((*data)[start:end])
@@ -38,122 +156,29 @@ func parseSpecialBlock(data *[]byte, start, end uint64) (*block, error) {
 	blockTypeStr := strings.ToLower(strings.Split(strings.Trim(strCode, " "), " ")[0])
 	// parse the rest of it
 	switch blockTypeStr {
-
 	case "template":
-		var data []string
-		// check no template name given
-		if len(tokens) < 2 {
-			return nil, errors.New(fmt.Sprintf("Invalid syntax for `template` tag, no template name given: '%s'", argsString))
-		}
-		data = append(data, tokens[1])
-		// check not correct form of expression
-		if len(tokens) >= 3 {
-			for _, assignExpr := range tokens[2:] {
-				key, val, err := parseAssignmentExpr(assignExpr)
-				if err != nil {
-					return nil, err
-				}
-				data = append(data, key)
-				data = append(data, val)
-			}
-		}
-		return &block{
-			blockType: blockTypeTemplate,
-			data:      data,
-		}, nil
-
+		return parseTemplateExpr(tokens)
 	case "expand":
-		var data []string
-		// check no template name given
-		if len(tokens) < 2 {
-			return nil, errors.New(fmt.Sprintf("Invalid syntax for `expand` tag, no template name given: '%s'", argsString))
-		}
-		data = append(data, tokens[1])
-		// check not correct form of expression
-		if len(tokens) >= 3 {
-			for _, assignExpr := range tokens[2:] {
-				key, val, err := parseAssignmentExpr(assignExpr)
-				if err != nil {
-					return nil, errors.New(fmt.Sprintf("Invalid syntax for `expand` tag, invalid assignment expression: '%s'", argsString))
-				}
-				data = append(data, key)
-				data = append(data, val)
-			}
-		}
-		return &block{
-			blockType: blockTypeExapand,
-			data:      data,
-		}, nil
-
+		return parseExpandExpr(tokens)
 	case "content":
-		return &block{
-			blockType: blockTypeContent,
-		}, nil
-
+		return parseContentExpr(tokens)
 	case "use":
-		var data []string
-		// check invalid length of variables
-		if len(tokens) != 2 {
-			return nil, errors.New(fmt.Sprintf("Invalid syntax for `use` tag, no variable name given: '%s'", argsString))
-		}
-		data = append(data, tokens[1])
-		return &block{
-			blockType: blockTypeUse,
-			data:      data,
-		}, nil
-
+		return parseUseExpr(tokens)
 	case "for":
-		var data []string
-		// check invalid length
-		if len(tokens) != 4 {
-			return nil, errors.New(fmt.Sprintf("Invalid syntax for `for` tag: %s", argsString))
-		}
-		// check for in
-		if tokens[2] != "in" {
-			return nil, errors.New(fmt.Sprintf("Invalid syntax for `for` tag, keyword `in` was expected: %s", argsString))
-		}
-		data = append(data, tokens[1])
-		data = append(data, tokens[3])
-		return &block{
-			blockType: blockTypeFor,
-			data:      data,
-		}, nil
-
+		return parseForExpr(tokens)
 	case "endfor":
-		return &block{
-			blockType: blockTypeEndFor,
-		}, nil
-
+		return parseEndForExpr(tokens)
 	case "var":
-		var data []string
-		// check invalid length
-		if len(tokens) != 2 {
-			return nil, errors.New(fmt.Sprintf("Invalid syntax for `var` tag: %s", argsString))
-		}
-		// parse expression
-		key, val, err := parseAssignmentExpr(tokens[1])
-		if err != nil {
-			return nil, err
-		}
-		data = append(data, key)
-		data = append(data, val)
-		return &block{
-			blockType: blockTypeVar,
-			data:      data,
-		}, nil
-
+		return parseVarExpr(tokens)
 	case "outonly":
-		return &block{
-			blockType: blockTypeOutOnly,
-		}, nil
-
+		return parseOutOnlyExpr(tokens)
 	default:
 		return nil, errors.New(fmt.Sprintf("Unrecognized block type '%s'", blockTypeStr))
 	}
 }
 
 // Convert HTML data to chain of blocks
-func HTMLToBlocks(data *[]byte) (*blockChain, error) {
+func parseHtmlBlockChain(data *[]byte) (*blockChain, error) {
 	bc := newBlockChain()
 	isOpen := false
 	var start uint64 = 0
