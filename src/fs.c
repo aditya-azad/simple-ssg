@@ -28,7 +28,7 @@ bool dir_empty(const char *path) {
   DIR *dir = opendir(path);
   // error opening directory
   if (dir == NULL) {
-    printf("Cannot open directory %s", path);
+    fprintf(stderr, "Cannot open directory %s\n", path);
     exit(1);
   }
   errno = 0;
