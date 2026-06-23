@@ -76,18 +76,16 @@ void tokenize(scanner *s) {
         add_token(s, RIGHT_BRACK);
       else if (match(s, "="))
         add_token(s, EQUAL);
-      else if (match(s, "%}"))
-        s->tag_open = false;
       else if (match(s, "for"))
         add_token(s, FOR);
-      else if (match(s, "endfor"))
-        add_token(s, ENDFOR);
       else if (match(s, "if"))
         add_token(s, IF);
       else if (match(s, "else if"))
         add_token(s, ELSEIF);
       else if (match(s, "else"))
         add_token(s, ELSE);
+      else if (match(s, "end"))
+        add_token(s, END);
       else if (match(s, "expand"))
         add_token(s, EXPAND);
       else if (match(s, "template"))
@@ -100,6 +98,8 @@ void tokenize(scanner *s) {
         add_token(s, GLOBAL);
       else if (match(s, "out"))
         add_token(s, OUT_ONLY);
+      else if (match(s, "%}"))
+        s->tag_open = false;
       else if (match(s, "\""))
         match_string(s);
       else if (is_numeric(s))

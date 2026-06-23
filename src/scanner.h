@@ -14,11 +14,10 @@ typedef enum {
   EQUAL,
   // keywords
   FOR,
-  ENDFOR,
   IF,
   ELSEIF,
   ELSE,
-  ENDIF,
+  END,
   EXPAND,
   TEMPLATE,
   PROP,

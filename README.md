@@ -70,11 +70,11 @@ This is where the contents of the page are pasted when using `template`.
 
 You can use the variables defined in `config.yml` file using this tag.
 
-### `{% for <variable_name> in <expression> %} ... {% endfor %}` 
+### `{% for <variable_name> in <expression> %} ... {% end %}`
 
 You can also loop over expressions that result in list using `for` statement. The variable is scoped within the scope. Variables are accessed using `{% var <variable_name> %}`.
 
-### `{% if <expression> %} ... {% else if <expression> %} ... {% else %} ... {% endif %}`
+### `{% if <expression> %} ... {% else if <expression> %} ... {% else %} ... {% end %}`
 
 There is support for conditional statements using if-else statements. "else if" and "else" blocks are optional.
 
