@@ -7,12 +7,14 @@
 #include <string.h>
 #include <sys/stat.h>
 
-bool dir_exists(const char *path) {
+// directory operations
+
+bool dir_exists(const char path[]) {
   struct stat st;
   return stat(path, &st) == 0 && S_ISDIR(st.st_mode);
 }
 
-bool dir_create(const char *path, bool exists_ok) {
+bool dir_create(const char path[], bool exists_ok) {
   if (mkdir(path, 0777) == 0) {
     return true;
   }
@@ -24,7 +26,7 @@ bool dir_create(const char *path, bool exists_ok) {
   return false;
 }
 
-bool dir_empty(const char *path) {
+bool dir_empty(const char path[]) {
   DIR *dir = opendir(path);
   // error opening directory
   if (dir == NULL) {
@@ -42,7 +44,7 @@ bool dir_empty(const char *path) {
   }
   // error while reading
   if (errno != 0) {
-    printf("Cannot read directory %s", path);
+    fprintf(stderr, "Cannot read directory %s", path);
     exit(1);
   }
   closedir(dir);

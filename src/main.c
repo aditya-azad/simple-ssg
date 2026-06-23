@@ -6,13 +6,14 @@
 typedef struct {
   char *input_directory;
   char *output_directory;
-} Args;
+} args;
 
-Args parse_args(int argc, char **argv) {
-  Args args;
+args parse_args(int argc, char *argv[]) {
+  args args;
   // check number of args
   if (argc != 3) {
-    fprintf(stderr, "Required input directory and output directory as arguments!\n");
+    fprintf(stderr,
+            "Required input directory and output directory as arguments!\n");
     exit(1);
   }
   // check input dir exists
@@ -35,6 +36,6 @@ Args parse_args(int argc, char **argv) {
 }
 
 int main(int argc, char **argv) {
-  Args args = parse_args(argc, argv);
-  return 0;
+  args args = parse_args(argc, argv);
+  return EXIT_SUCCESS;
 }

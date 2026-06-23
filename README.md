@@ -52,7 +52,7 @@ The language use tags similar to Jinja's `{% ... %}` syntax. Templates can impor
 
 ### `{% template <template_name> <props> %}`
 
-The `template_name` is used as template for the page. The contents of the page is replaced with contents of the template. The replaced content is placed in `content` block. Additionally props can be passed to the templates. They follow `x="abc"` syntax. It supports floats, ints, strings and list types. To use props, use `prop` tag.
+The `template_name` is used as template for the page. The contents of the page is replaced with contents of the template. The replaced content is placed in `content` block. Additionally props can be passed to the templates. They follow `x="abc"` syntax. It supports number, strings and list types. To use props, use `prop` tag.
 
 ### `{% expand <template_name> <props> %}`
 
