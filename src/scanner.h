@@ -24,6 +24,7 @@ typedef enum {
   PROP,
   CONTENT,
   GLOBAL,
+  OUT_ONLY,
   // literals
   STRING,
   NUMBER,

@@ -78,7 +78,7 @@ You can also loop over expressions that result in list using `for` statement. Th
 
 There is support for conditional statements using if-else statements. "else if" and "else" blocks are optional.
 
-### `{% out_only %}`
+### `{% out %}`
 
 Only supported in `ipynb`. If this string is present anywhere in a code cell, the code will not be displayed, only the output
 
