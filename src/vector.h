@@ -11,10 +11,10 @@ typedef struct {
   void *data;
 } vector;
 
-vector make_vec(size_t el_size, size_t count);
-void push(vector *vec, void *element);
-void get(vector *vec, size_t pos, void *element);
-void pop(vector *vec, void *element);
-void free_vec(vector *vec);
+vector vec_make(size_t el_size, size_t count);
+void vec_push(vector *vec, void *element);
+void vec_get(vector *vec, size_t pos, void *element);
+void vec_pop(vector *vec, void *element);
+void vec_free(vector *vec);
 
 #endif

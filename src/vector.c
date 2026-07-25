@@ -28,7 +28,7 @@ void increase_cap_if_required(vector *vec) {
   vec->data = new_data;
 }
 
-vector make_vec(size_t el_size, size_t count) {
+vector vec_make(size_t el_size, size_t count) {
   vector v;
   size_t mem_req = count * el_size;
   if (count == 0) {
@@ -50,14 +50,14 @@ vector make_vec(size_t el_size, size_t count) {
   return v;
 }
 
-void push(vector *vec, void *element) {
+void vec_push(vector *vec, void *element) {
   increase_cap_if_required(vec);
   size_t offset = vec->num_els * vec->el_size;
   memcpy((char *)vec->data + offset, element, vec->el_size);
   vec->num_els++;
 }
 
-void get(vector *vec, size_t pos, void *element) {
+void vec_get(vector *vec, size_t pos, void *element) {
   if (pos >= vec->num_els) {
     fprintf(stderr, "Out of bound vector element access\n");
     exit(EXIT_FAILURE);
@@ -66,9 +66,9 @@ void get(vector *vec, size_t pos, void *element) {
   memcpy((char *)vec->data + offset, element, vec->el_size);
 }
 
-void pop(vector *vec, void *element) {
-  get(vec, vec->num_els - 1, element);
+void vec_pop(vector *vec, void *element) {
+  vec_get(vec, vec->num_els - 1, element);
   vec->num_els--;
 }
 
-void free_vec(vector *vec) { free(vec->data); }
+void vec_free(vector *vec) { free(vec->data); }
