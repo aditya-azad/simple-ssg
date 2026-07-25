@@ -1,5 +1,7 @@
 #include "scanner.h"
 
+#include "vector.h"
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -11,6 +13,7 @@ void error(scanner *s, char error[]) {
 }
 
 bool match(scanner *s, const char *word) {
+  // save position so we can rewind on failure
   fpos_t pos;
   if (fgetpos(s->fp, &pos) != 0) {
     return false;
@@ -25,6 +28,60 @@ bool match(scanner *s, const char *word) {
   }
 
   return true;
+}
+
+vector *match_string(scanner *s) {
+  // save position so we can rewind on failure
+  fpos_t pos;
+  if (fgetpos(s->fp, &pos) != 0) {
+    return NULL;
+  }
+
+  // must start with opening quote
+  int ch = fgetc(s->fp);
+  if (ch != '"') {
+    fsetpos(s->fp, &pos);
+    return NULL;
+  }
+
+  // collect characters into a vector
+  vector *vec = malloc(sizeof(vector));
+  if (vec == NULL) {
+    fsetpos(s->fp, &pos);
+    return NULL;
+  }
+  *vec = vec_make(sizeof(char), 16);
+
+  // read until closing quote
+  bool closed = false;
+  while ((ch = fgetc(s->fp)) != EOF) {
+    if (ch == '"') {
+      closed = true;
+      break;
+    }
+
+    // handle escapes: drop the backslash, keep the next char
+    if (ch == '\\') {
+      int next = fgetc(s->fp);
+      if (next == EOF) {
+        break;
+      }
+      ch = next;
+    }
+
+    char c = (char)ch;
+    vec_push(vec, &c);
+  }
+
+  // unterminated string: rewind and return NULL
+  if (!closed) {
+    vec_free(vec);
+    free(vec);
+    fsetpos(s->fp, &pos);
+    return NULL;
+  }
+
+  return vec;
 }
 
 void add_token(scanner *s, token_type tt) {
@@ -64,7 +121,9 @@ void tokenize(scanner *s) {
     // if we are inside code block
     if (s->tag_open) {
       // TODO: skip white space
-      if (match(s, ","))
+      if (match(s, "%}"))
+        s->tag_open = false;
+      else if (match(s, ","))
         add_token(s, COMMA);
       else if (match(s, "("))
         add_token(s, LEFT_PAREN);
@@ -98,10 +157,14 @@ void tokenize(scanner *s) {
         add_token(s, GLOBAL);
       else if (match(s, "out"))
         add_token(s, OUT_ONLY);
-      else if (match(s, "%}"))
-        s->tag_open = false;
-      else if (match(s, "\""))
-        match_string(s);
+      else if (match(s, "\"")) {
+        vector *str = match_string(s);
+        if (str != NULL) {
+          vec_free(str);
+          // TODO: use it
+          free(str);
+        }
+      }
       else if (is_numeric(s))
         match_number(s);
       else

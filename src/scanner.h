@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#include "vector.h"
+
 typedef enum {
   // characters
   COMMA,
@@ -50,6 +52,7 @@ typedef struct {
 } scanner;
 
 scanner make_scanner(const char path[]);
+vector *match_string(scanner *s);
 void tokenize(scanner *s);
 
 #endif
