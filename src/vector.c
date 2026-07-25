@@ -70,3 +70,5 @@ void pop(vector *vec, void *element) {
   get(vec, vec->num_els - 1, element);
   vec->num_els--;
 }
+
+void free_vec(vector *vec) { free(vec->data); }

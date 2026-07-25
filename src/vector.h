@@ -15,5 +15,6 @@ vector make_vec(size_t el_size, size_t count);
 void push(vector *vec, void *element);
 void get(vector *vec, size_t pos, void *element);
 void pop(vector *vec, void *element);
+void free_vec(vector *vec);
 
 #endif
